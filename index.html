@@ -1,0 +1,96 @@
+<!-- HamStatus Card Wrapper -->
+<div id="hamstatus-card" class="hs-card">
+  <div class="hs-header">
+    <span class="hs-title">HamStatus</span>
+    <span id="hs-indicator" class="hs-indicator offline">Offline</span>
+  </div>
+  <div class="hs-body">
+    <p><strong>Callsign:</strong> <span id="hs-callsign">--</span></p>
+    <p><strong>Status:</strong> <span id="hs-mode">Listening</span></p>
+    <p><strong>Frequency:</strong> <span id="hs-freq">--</span> (<span id="hs-type">--</span>)</p>
+    <p><strong>Location:</strong> <span id="hs-loc">--</span></p>
+    <p class="hs-msg"><em>"<span id="hs-message">No status set.</span>"</em></p>
+  </div>
+  <div class="hs-footer">
+    Last updated: <span id="hs-time">--</span>
+  </div>
+</div>
+
+<!-- Simple Styling to make it look sharp -->
+<style>
+  .hs-card {
+    font-family: system-ui, -apple-system, sans-serif;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    max-width: 320px;
+    background: #1e1e1e;
+    color: #fff;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    overflow: hidden;
+  }
+  .hs-header {
+    background: #2d2d2d;
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #3c3c3c;
+  }
+  .hs-title { font-weight: bold; }
+  .hs-indicator {
+    font-size: 0.8rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: bold;
+  }
+  .hs-indicator.active { background: #2ecc71; color: #fff; }
+  .hs-indicator.offline { background: #e74c3c; color: #fff; }
+  .hs-body { padding: 15px; font-size: 0.95rem; }
+  .hs-body p { margin: 8px 0; }
+  .hs-msg { color: #aaa; margin-top: 12px; }
+  .hs-footer {
+    background: #181818;
+    padding: 8px 15px;
+    font-size: 0.75rem;
+    color: #777;
+    border-top: 1px solid #282828;
+  }
+</style>
+
+<!-- The JavaScript Magic -->
+<script>
+  async function fetchHamStatus() {
+    try {
+      // Fetches the JSON file from the root of your website
+      const response = await fetch('./status.json');
+      if (!response.ok) throw new Error('Network response was not ok');
+      const data = await response.json();
+
+      // Update the HTML elements with our JSON data
+      document.getElementById('hs-callsign').textContent = data.callsign;
+      document.getElementById('hs-freq').textContent = data.frequency + " MHz";
+      document.getElementById('hs-type').textContent = data.mode;
+      document.getElementById('hs-loc').textContent = `${data.location.description} (${data.location.grid_square})`;
+      document.getElementById('hs-message').textContent = data.custom_message;
+      
+      // Format the ISO timestamp to a readable local time
+      const updateTime = new Date(data.last_updated);
+      document.getElementById('hs-time').textContent = updateTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+      // Toggle active status indicator
+      const indicator = document.getElementById('hs-indicator');
+      if (data.is_active) {
+        indicator.textContent = "On Air";
+        indicator.className = "hs-indicator active";
+      } else {
+        indicator.textContent = "Offline";
+        indicator.className = "hs-indicator offline";
+      }
+    } catch (error) {
+      console.error('Error fetching HamStatus:', error);
+    }
+  }
+
+  // Run the function when the page loads
+  fetchHamStatus();
+</script>
