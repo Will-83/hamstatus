@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "callsign": "W8MB",
-  "state": "monitoring",
+  "state": "off_air",
   "activity": "Listening",
   "frequency": {
     "value": 31291,
@@ -15,8 +15,5 @@
     "reference": "Local Repeater"
   },
   "custom_message": "Monitoring the local repeater. Drop a call!",
-  "last_updated": "2026-07-17T22:47:33Z",
-  "talkgroup": 31291,
-  "talkgroup_name": "SWMO",
-  "network": "BrandMeister"
+  "last_updated": "2026-07-17T22:49:03Z"
 }
