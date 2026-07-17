@@ -4,7 +4,7 @@
   "state": "monitoring",
   "activity": "Listening",
   "frequency": {
-    "value": 147.090,
+    "value": 147.09,
     "unit": "MHz",
     "band": "2m"
   },
@@ -15,5 +15,5 @@
     "reference": "Local Repeater"
   },
   "custom_message": "Monitoring the local repeater. Drop a call!",
-  "last_updated": "2026-07-17T12:00:00Z"
+  "last_updated": "2026-07-17T17:03:04.425Z"
 }
