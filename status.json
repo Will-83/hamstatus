@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "callsign": "W8MB",
-  "state": "off_air",
+  "state": "on_air",
   "activity": "Listening",
   "frequency": {
     "value": 147.09,
@@ -15,5 +15,5 @@
     "reference": "Local Repeater"
   },
   "custom_message": "Monitoring the local repeater. Drop a call!",
-  "last_updated": "2026-07-17T19:38:06Z"
+  "last_updated": "2026-07-17T19:41:14Z"
 }
