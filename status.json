@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "callsign": "W8MB",
-  "state": "on_air",
-  "activity": "SWMO",
+  "state": "monitoring",
+  "activity": "Listening",
   "frequency": {
     "value": 147.09,
     "unit": "MHz",
@@ -14,8 +14,8 @@
     "grid_square": "EM37",
     "reference": "Local Repeater"
   },
-  "custom_message": "Transmitting on SWMO",
-  "last_updated": "2026-07-17T23:54:56Z",
+  "custom_message": "Just wrapped up -- still listening.",
+  "last_updated": "2026-07-17T23:55:27Z",
   "talkgroup": 31291,
   "talkgroup_name": "SWMO",
   "network": "BrandMeister"
