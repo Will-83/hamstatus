@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brandmeister Last Heard — Test Listener</title>
+<style>
+  :root {
+    --bg: #14110d; --panel: #1c1712; --fg: #ffb000;
+    --fg-dim: #7a5200; --fg-muted: #8a6a2e; --ok: #39ff88; --err: #ff5555;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; background: var(--bg); color: var(--fg);
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Consolas, monospace;
+    padding: 20px; display: flex; justify-content: center;
+  }
+  .wrap { width: 100%; max-width: 640px; }
+  h1 { font-size: 1.1rem; margin: 0 0 4px; }
+  .subtitle { color: var(--fg-muted); font-size: 0.8rem; margin-bottom: 20px; }
+  .panel {
+    background: var(--panel); border: 1px solid var(--fg-dim); border-radius: 8px;
+    padding: 16px; margin-bottom: 16px;
+  }
+  label { display: block; font-size: 0.8rem; color: var(--fg-muted); margin-bottom: 6px; }
+  input[type=text] {
+    width: 100%; padding: 10px 12px; background: #241d14; border: 1px solid var(--fg-dim);
+    border-radius: 6px; color: var(--fg); font-size: 1rem; font-family: inherit;
+  }
+  button {
+    margin-top: 12px; width: 100%; padding: 11px; border: none; border-radius: 6px;
+    font-weight: 700; font-size: 0.95rem; cursor: pointer; background: var(--fg);
+    color: #1a1300; font-family: inherit;
+  }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .status-row { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; margin-top: 12px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--fg-dim); }
+  .dot.connected { background: var(--ok); }
+  .dot.error { background: var(--err); }
+  .stat { color: var(--fg-muted); }
+  #log {
+    background: #0d0a07; border: 1px solid var(--fg-dim); border-radius: 6px;
+    padding: 10px; height: 320px; overflow-y: auto; font-size: 0.8rem; line-height: 1.6;
+  }
+  .entry { padding: 4px 0; border-bottom: 1px solid #241d14; }
+  .entry.match { color: var(--ok); font-weight: 700; }
+  .entry .t { color: var(--fg-muted); margin-right: 8px; }
+  .empty { color: var(--fg-muted); font-style: italic; }
+  .fine-print { font-size: 0.72rem; color: var(--fg-muted); margin-top: 10px; line-height: 1.4; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Brandmeister Last Heard — Test Listener</h1>
+  <div class="subtitle">Watches the live network feed for one DMR radio ID. Nothing is saved anywhere — this just proves detection works.</div>
+
+  <div class="panel">
+    <label for="dmrid">Your DMR Radio ID (7-digit personal ID, not your hotspot ID)</label>
+    <input type="text" id="dmrid" placeholder="e.g. 3121234" inputmode="numeric">
+    <button id="connect-btn">Start Listening</button>
+    <div class="status-row">
+      <span class="dot" id="dot"></span>
+      <span id="status-text">Not connected</span>
+      <span class="stat" id="event-count" style="margin-left:auto;">0 events seen</span>
+    </div>
+  </div>
+
+  <div id="log"><div class="empty">Matches for your ID will appear here. Key up on your radio/hotspot to test.</div></div>
+
+  <div class="fine-print">
+    Connects directly from your browser to api.brandmeister.network's public Last Heard socket — the
+    same feed their own website uses. This page only reads; it never sends anything. If "Start Listening"
+    never shows Connected, your browser or network may be blocking the WebSocket — that's useful to know too.
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+(function () {
+  const el = id => document.getElementById(id);
+  let socket = null;
+  let eventCount = 0;
+  let watchedId = null;
+
+  function setStatus(text, cls) {
+    el('status-text').textContent = text;
+    el('dot').className = 'dot' + (cls ? ' ' + cls : '');
+  }
+
+  function logLine(text, isMatch) {
+    const log = el('log');
+    if (log.querySelector('.empty')) log.innerHTML = '';
+    const div = document.createElement('div');
+    div.className = 'entry' + (isMatch ? ' match' : '');
+    const time = new Date().toLocaleTimeString();
+    div.innerHTML = `<span class="t">${time}</span>${text}`;
+    log.prepend(div);
+    // keep the log from growing forever
+    while (log.children.length > 200) log.removeChild(log.lastChild);
+  }
+
+  el('connect-btn').addEventListener('click', function () {
+    const idVal = el('dmrid').value.trim();
+    if (!idVal || isNaN(idVal)) {
+      alert('Enter your numeric DMR radio ID first.');
+      return;
+    }
+    watchedId = parseInt(idVal, 10);
+
+    if (socket) { socket.disconnect(); }
+
+    setStatus('Connecting...', null);
+    this.disabled = true;
+    const btn = this;
+
+    socket = io('https://api.brandmeister.network', {
+      path: '/lh/socket.io',
+      transports: ['websocket']
+    });
+
+    socket.on('connect', () => {
+      setStatus('Connected — listening for ID ' + watchedId, 'connected');
+      btn.disabled = false;
+      btn.textContent = 'Reconnect';
+    });
+
+    socket.on('disconnect', () => {
+      setStatus('Disconnected', 'error');
+      btn.disabled = false;
+    });
+
+    socket.on('connect_error', (err) => {
+      setStatus('Connection failed: ' + err.message, 'error');
+      btn.disabled = false;
+    });
+
+    socket.on('mqtt', (data) => {
+      eventCount++;
+      el('event-count').textContent = eventCount + ' events seen';
+      let call;
+      try {
+        call = JSON.parse(data.payload);
+      } catch (e) { return; }
+
+      if (!idMatches(call.SourceID, watchedId)) return;
+
+      if (call.Event === 'Session-Start') {
+        logLine(`🔴 ON AIR — TG ${call.DestinationName || call.DestinationID} (slot ${call.Slot}) — source ID ${call.SourceID}`, true);
+      } else if (call.Event === 'Session-Stop') {
+        const duration = call.Stop && call.Start ? (call.Stop - call.Start) : '?';
+        logLine(`⚪ Session ended — ${duration}s on TG ${call.DestinationName || call.DestinationID}`, true);
+      }
+    });
+  });
+
+  // Matches your bare personal ID against a SourceID that may have a 2-digit
+  // hotspot ESSID suffix appended (e.g. base 3193254 vs reported 319325401).
+  function idMatches(sourceId, baseId) {
+    if (sourceId === baseId) return true;
+    const s = String(sourceId), b = String(baseId);
+    return s.length === b.length + 2 && s.startsWith(b);
+  }
+})();
+</script>
+</body>
+</html>
