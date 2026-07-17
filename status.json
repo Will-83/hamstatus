@@ -1,0 +1,14 @@
+{
+  "callsign": "W8MB",
+  "is_active": true,
+  "operating_mode": "Standard",
+  "frequency": "146.940",
+  "mode": "FM",
+  "location": {
+    "grid_square": "EM37",
+    "description": "Mansfield, MO",
+    "reference": "Local Repeater"
+  },
+  "last_updated": "2026-07-17T12:00:00Z",
+  "custom_message": "Monitoring the local repeater. Drop a call!"
+}
