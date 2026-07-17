@@ -84,19 +84,21 @@ def github_put(new_data, sha):
 
 # ------------------------------------------------------------- State machine
 
-def set_state(new_state):
+def set_state(new_state, extra_fields=None):
     global current_state
     with state_lock:
-        if new_state == current_state:
+        if new_state == current_state and not extra_fields:
             return
         try:
             current = github_get()
             data = json.loads(base64.b64decode(current["content"]).decode("utf-8"))
             data["state"] = new_state
+            if extra_fields:
+                data.update(extra_fields)
             data["last_updated"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
             github_put(data, current["sha"])
             current_state = new_state
-            print(f"[status.json] state -> {new_state}")
+            print(f"[status.json] state -> {new_state}" + (f" ({extra_fields})" if extra_fields else ""))
         except urllib.error.HTTPError as e:
             print(f"[error] GitHub API returned {e.code}: {e.reason}")
         except Exception as e:
@@ -110,8 +112,8 @@ def cancel_pending_timers():
     pending_timers = []
 
 
-def schedule_transition(delay, new_state):
-    t = threading.Timer(delay, lambda: set_state(new_state))
+def schedule_transition(delay, new_state, extra_fields=None):
+    t = threading.Timer(delay, lambda: set_state(new_state, extra_fields))
     t.daemon = True
     t.start()
     pending_timers.append(t)
@@ -119,14 +121,14 @@ def schedule_transition(delay, new_state):
 
 def on_keyup(tg):
     cancel_pending_timers()
-    set_state("on_air")
+    set_state("on_air", extra_fields={"mode": "DMR", "activity": tg})
     print(f"\U0001F534 ON AIR -> {tg}")
 
 
 def on_keydown(tg, duration):
     print(f"\u26AA key released ({duration}s) -- monitoring in {MONITORING_AFTER}s, off_air in {OFF_AIR_AFTER}s unless you key up again")
     cancel_pending_timers()
-    schedule_transition(MONITORING_AFTER, "monitoring")
+    schedule_transition(MONITORING_AFTER, "monitoring", extra_fields={"activity": "Listening"})
     schedule_transition(OFF_AIR_AFTER, "off_air")
 
 
