@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homebrew 10m-40m Linked Dipole - W8MB</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&display=swap" rel="stylesheet">
+    <style>
+        .nav-menu-wrapper { position: relative; display: inline-block; }
+        .nav-menu-btn {
+            background-color: #1e293b; color: #38bdf8; border: 1px solid #334155;
+            padding: 8px 14px; border-radius: 6px; font-size: 0.85rem; font-weight: bold;
+            cursor: pointer; transition: background-color 0.2s ease;
+        }
+        .nav-menu-btn:hover { background-color: #334155; }
+        .nav-menu-dropdown {
+            display: none; position: absolute; top: calc(100% + 8px); right: 0;
+            min-width: 160px; background-color: #111a2e; border: 1px solid #1e293b;
+            border-radius: 6px; box-shadow: 0 8px 16px rgba(0,0,0,0.45); padding: 6px; z-index: 500;
+        }
+        .nav-menu-dropdown.open { display: block; }
+        .nav-menu-dropdown a {
+            display: block; padding: 8px 10px; border-radius: 4px; font-size: 0.9rem;
+            font-weight: 500; color: #cbd5e1 !important;
+        }
+        .nav-menu-dropdown a:hover { background-color: #1e293b; color: #38bdf8 !important; text-decoration: none !important; }
+        .status-pill {
+            display: inline-block; font-size: 0.75rem; font-weight: bold; letter-spacing: 0.5px;
+            padding: 3px 10px; border-radius: 12px; color: #ffffff; background: #2ecc71;
+            margin-bottom: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-wrapper">
+
+    <!-- NAVIGATION HEADER -->
+    <table role="presentation" class="layout-table" style="margin-bottom: 20px;">
+        <tr>
+            <td style="vertical-align: middle;">
+                <a href="/index.html" class="logo-text" style="color: #38bdf8; font-size: 1.5rem; font-weight: 700; letter-spacing: 1px; text-decoration: none;">W8MB</a>
+            </td>
+            <td style="text-align: right; vertical-align: middle;">
+                <div class="nav-menu-wrapper">
+                    <button id="nav-menu-btn" class="nav-menu-btn" type="button">☰ Menu</button>
+                    <div id="nav-menu-dropdown" class="nav-menu-dropdown">
+                        <a href="/index.html">← Home</a>
+                        <a href="/about.html">About</a>
+                        <a href="/projects-temp.html">Projects</a>
+                        <a href="/past-projects.html">Past Projects</a>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <table role="presentation" class="layout-table">
+        <tr>
+            <td class="main-col" style="width: 100%;">
+
+                <div class="card padding-lg">
+                    <span class="status-pill">FULLY OPERATIONAL</span>
+                    <h1 class="hello-header" style="font-size: 1.8rem; margin: 0 0 20px 0;">Homebrew 10m-40m Linked Dipole</h1>
+
+                    <table role="presentation" class="inner-layout-table">
+                        <tr>
+                            <td class="bio-text-cell">
+                                Designed for fast deployment during POTA (Parks on the Air) activations and emergency field operations. This dipole covers 10, 15, 20, and 40 meters by manually opening or closing Anderson Powerpole connectors at calculated wire links.<br><br>
+                                <strong style="color: #ffffff;">Key Build Details:</strong>
+                                <ul style="padding-left: 20px; margin: 8px 0; color: #cbd5e1;">
+                                    <li>Choke: Custom FT-240-31 common-mode toroidal choke to stop feedline radiation.</li>
+                                    <li>Hardware: 3D printed center insulator and link dogbones printed in high-temp, UV-resistant black PETG.</li>
+                                    <li>Wire: 18 AWG Silky ultra-flexible copper-clad steel wire for tangle-free deployment.</li>
+                                </ul>
+                            </td>
+                            <td class="bio-img-cell" style="width: 280px;">
+                                <img src="/images/Dipole.jpg" alt="Homebrew 10m-40m Linked Dipole" class="bio-img" />
+                                <div class="img-caption">Custom 1:1 common-mode choke and PETG wire links.</div>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <div class="signature">
+                        <span class="sig-73">73,</span><br>
+                        <span class="sig-name">Will</span>
+                    </div>
+                </div>
+
+                <div class="card padding-lg text-center">
+                    <a href="/projects-temp.html" class="btn" style="display: inline-block; max-width: 240px; margin: 0 auto;">← Back to All Projects</a>
+                </div>
+
+            </td>
+        </tr>
+    </table>
+
+    <div class="footer-copyright">
+        &copy; 2026 Will - W8MB. Hosted on <a href="https://will-83.github.io/" target="_blank" style="color: #38bdf8; text-decoration: none;">GitHub Pages</a>.
+    </div>
+</div>
+
+<script>
+    const navMenuBtn = document.getElementById('nav-menu-btn');
+    const navMenuDropdown = document.getElementById('nav-menu-dropdown');
+    navMenuBtn.addEventListener('click', function (e) {
+        navMenuDropdown.classList.toggle('open');
+        e.stopPropagation();
+    });
+    document.addEventListener('click', function (e) {
+        if (navMenuDropdown.classList.contains('open') && !navMenuDropdown.contains(e.target) && e.target !== navMenuBtn) {
+            navMenuDropdown.classList.remove('open');
+        }
+    });
+</script>
+</body>
+</html>
