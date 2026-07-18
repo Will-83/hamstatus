@@ -98,26 +98,10 @@
 
   details { margin-top: 14px; }
   summary { cursor: pointer; font-size: 0.8rem; color: var(--muted); }
-  #gate { }
-  #app { display: none; }
 </style>
 </head>
 <body>
 <div class="wrap">
-
-  <!-- ===================== PASSPHRASE GATE ===================== -->
-  <div id="gate" class="card">
-    <h1>HamStatus Admin</h1>
-    <div class="subtitle">Enter passphrase to continue</div>
-    <input type="password" id="gate-input" placeholder="Passphrase" autocomplete="off">
-    <button class="btn-primary" id="gate-btn">Unlock</button>
-    <div id="gate-msg" class="msg err"></div>
-    <div class="fine-print">
-      This is a light deterrent only, not real security &mdash; anyone viewing this page's
-      source can read the check. The actual protection is: keep your GitHub token private
-      and don't share this page's URL.
-    </div>
-  </div>
 
   <!-- ===================== MAIN APP ===================== -->
   <div id="app">
@@ -217,47 +201,7 @@
 <script>
 (function () {
   // =========================================================
-  // 1. PASSPHRASE GATE
-  // To change the passphrase: open browser console on this page,
-  // run  crypto.subtle.digest('SHA-256', new TextEncoder().encode('yourphrase'))
-  // .then(b => console.log(Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('')))
-  // then paste the printed hash below.
-  // Default passphrase is "changeme" — replace this hash before publishing.
-  // =========================================================
-  const PASSPHRASE_HASH = "057ba03d6c44104863dc7361fe4578965d1887360f90a0895882e58a6248fc86"; // sha256("changeme") — CHANGE THIS before publishing
-
-  async function sha256Hex(text) {
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
-    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-  }
-
-  const gate = document.getElementById('gate');
-  const app = document.getElementById('app');
-  const gateInput = document.getElementById('gate-input');
-  const gateBtn = document.getElementById('gate-btn');
-  const gateMsg = document.getElementById('gate-msg');
-
-  async function tryUnlock() {
-    const hash = await sha256Hex(gateInput.value);
-    if (hash === PASSPHRASE_HASH) {
-      gate.style.display = 'none';
-      app.style.display = 'block';
-      sessionStorage.setItem('hs_unlocked', '1');
-    } else {
-      gateMsg.textContent = 'Incorrect passphrase.';
-      gateMsg.classList.add('show');
-    }
-  }
-  gateBtn.addEventListener('click', tryUnlock);
-  gateInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
-
-  if (sessionStorage.getItem('hs_unlocked') === '1') {
-    gate.style.display = 'none';
-    app.style.display = 'block';
-  }
-
-  // =========================================================
-  // 2. GITHUB API HELPERS
+  // 1. GITHUB API HELPERS
   // =========================================================
   const el = id => document.getElementById(id);
 
@@ -295,7 +239,7 @@
   let currentData = null;
 
   // =========================================================
-  // 3. LOAD CURRENT STATUS
+  // 2. LOAD CURRENT STATUS
   // =========================================================
   el('load-btn').addEventListener('click', async function () {
     const token = el('token').value.trim();
@@ -352,7 +296,7 @@
   }
 
   // =========================================================
-  // 4. SAVE UPDATED STATUS
+  // 3. SAVE UPDATED STATUS
   // =========================================================
   el('save-btn').addEventListener('click', async function () {
     const token = el('token').value.trim();
