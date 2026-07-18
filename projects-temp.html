@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>W8MB - Workbench Projects</title>
+    <!-- Link to your external stylesheet -->
+    <link rel="stylesheet" href="/style.css">
+    <!-- Google Fonts for the signature -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&display=swap" rel="stylesheet">
+    <style>
+        /* Small status tag on each compact card */
+        .project-status-tag {
+            display: inline-block;
+            font-size: 0.65rem;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            color: #ffffff;
+            margin-bottom: 6px;
+        }
+        .project-card-link {
+            display: inline-block;
+            margin-top: 6px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #38bdf8 !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-wrapper">
+    
+    <!-- HEADER (Reusable Banner) -->
+    <div class="header-banner">
+        <a href="/index.html">
+            <img src="/images/Header.jpg" alt="W8MB Banner" />
+        </a>
+    </div>
+
+    <!-- MAIN BODY LAYOUT -->
+    <table role="presentation" class="layout-table">
+        <tr>
+            <!-- LEFT SIDEBAR (Consistent with Home Page) -->
+            <td class="sidebar-col">
+                
+                <!-- NAVIGATION CARD -->
+                <div class="card">
+                    <h3 class="section-title">Navigation</h3>
+                    <a href="/index.html" class="btn">← Back to Home</a>
+                    <a href="/about.html" class="btn">About My Station</a>
+                    <a href="/past-projects.html" class="btn">Past Projects Archive</a>
+                </div>
+
+                <!-- STATION QUICK STATS -->
+                <div class="card">
+                    <h3 class="section-title">Station Info</h3>
+                    <div class="sidebar-row"><span>QTH</span><strong>Mansfield, MO</strong></div>
+                    <div class="sidebar-row"><span>County</span><strong>Wright County</strong></div>
+                    <div class="sidebar-row"><span>Grid</span><strong>EM47</strong></div>
+                    <div class="sidebar-row"><span>Extra Cl.</span><strong>June 2026</strong></div>
+                </div>
+
+                <!-- ON THE AIR -->
+                <div class="card">
+                    <h3 class="section-title">On The Air</h3>
+                    <img src="https://will-83.github.io/status.png" alt="Ham Radio Status" class="status-img" />
+                </div>
+
+            </td>
+
+            <!-- RIGHT MAIN CONTENT -->
+            <td class="main-col">
+                
+                <!-- PAGE HEADER CARD -->
+                <div class="card padding-lg">
+                    <h2 class="hello-header">THE WORKBENCH & PROJECTS</h2>
+                    <p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.6; margin: 0;">
+                        Welcome to my build log! This is where I document my amateur radio and maker projects. I love combining 3D printing (using PETG on my Klipper-powered Ender 3) with radio hardware, antenna building, and emergency communications gear. Tap any project below for the full build log. Older projects move to the <a href="/past-projects.html">Past Projects archive</a> to keep this list from running on forever.
+                    </p>
+                </div>
+
+                <!-- PROJECT CARD GRID -->
+                <div class="card padding-lg">
+                    <h2 class="section-heading">Current Projects</h2>
+
+                    <!--
+                        ======================================================
+                        HOW TO ADD A NEW PROJECT CARD (paste as the FIRST
+                        <td class="project-cell"> inside the <tr> below, so it
+                        shows up first / top-left in the grid):
+
+                        <td class="project-cell">
+                            <div class="project-card">
+                                <img src="/images/YOUR-IMAGE.jpg" alt="Project Name" />
+                                <div class="project-card-body">
+                                    <span class="project-status-tag" style="background:#2ecc71;">STATUS LABEL</span>
+                                    <div class="project-title">Project Name</div>
+                                    <div class="project-desc">One or two sentence summary.</div>
+                                    <a href="project-your-slug.html" class="project-card-link">Read Full Build Log →</a>
+                                </div>
+                            </div>
+                        </td>
+
+                        Status tag colors used on this site:
+                          #2ecc71 = green  (Fully Operational)
+                          #f0ad4e = amber  (Deployment / In Progress)
+                          #64748b = gray   (Design Phase / Planning)
+
+                        Once you have more than 6 cards, move the oldest
+                        card's block into past-projects.html instead of
+                        deleting it, so its build log page stays reachable.
+                        ======================================================
+                    -->
+
+                    <table role="presentation" class="projects-grid-table">
+                        <tr>
+                            <td class="project-cell">
+                                <div class="project-card">
+                                    <img src="/images/Dipole.jpg" alt="Linked Dipole" />
+                                    <div class="project-card-body">
+                                        <span class="project-status-tag" style="background:#2ecc71;">FULLY OPERATIONAL</span>
+                                        <div class="project-title">Linked Dipole</div>
+                                        <div class="project-desc">10m-40m multi-band build utilizing an FT-240-31 common-mode choke.</div>
+                                        <a href="/project-linked-dipole.html" class="project-card-link">Read Full Build Log →</a>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="project-cell">
+                                <div class="project-card">
+                                    <img src="/images/Wio_L1.jpg" alt="Meshtastic Home Gateway" />
+                                    <div class="project-card-body">
+                                        <span class="project-status-tag" style="background:#f0ad4e;">DEPLOYMENT STAGE</span>
+                                        <div class="project-title">Meshtastic Home Gateway</div>
+                                        <div class="project-desc">Weatherproof Heltec V4 gateway node for permanent local mesh coverage.</div>
+                                        <a href="/project-meshtastic-gateway.html" class="project-card-link">Read Full Build Log →</a>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="project-cell">
+                                <div class="project-card">
+                                    <img src="/images/Key.jpg" alt="Mobile Digital Hotspot" />
+                                    <div class="project-card-body">
+                                        <span class="project-status-tag" style="background:#64748b;">DESIGN PHASE</span>
+                                        <div class="project-title">Mobile Digital Hotspot</div>
+                                        <div class="project-desc">Vehicle-integrated DMR/YSF/NXDN hotspot with dash-mounted display.</div>
+                                        <a href="/project-mobile-hotspot.html" class="project-card-link">Read Full Build Log →</a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+            </td>
+        </tr>
+    </table>
+
+    <!-- CLEAN COPYRIGHT FOOTER -->
+    <div class="footer-copyright">
+        Thank you for checking out my builds! &bull; 73, Will - W8MB
+    </div>
+</div>
+
+</body>
+</html>
