@@ -1,12 +1,12 @@
 {
   "version": "1.0",
   "callsign": "W8MB",
-  "state": "off_air",
-  "activity": "Nothing",
+  "state": "monitoring",
+  "activity": "Listening",
   "frequency": {
-    "value": 0,
+    "value": 147.09,
     "unit": "MHz",
-    "band": "70cm"
+    "band": "2m"
   },
   "mode": "FM",
   "location": {
@@ -14,6 +14,6 @@
     "grid_square": "EM37",
     "reference": "Local Repeater"
   },
-  "custom_message": "Off the Air",
-  "last_updated": "2026-07-18T02:30:16.938Z"
+  "custom_message": "",
+  "last_updated": "2026-07-18T02:48:04.934Z"
 }
