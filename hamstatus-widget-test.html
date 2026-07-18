@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HamStatus Widget — Concept Test</title>
+<style>
+    body {
+        background-color: #0b131f;
+        color: #e2e8f0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 20px;
+    }
+
+    .wrapper {
+        max-width: 480px;
+        margin: 0 auto;
+    }
+
+    h1 {
+        font-size: 1.1rem;
+        color: #f1f5f9;
+        letter-spacing: 1px;
+        margin-bottom: 4px;
+    }
+
+    .subtext {
+        color: #64748b;
+        font-size: 0.8rem;
+        margin-bottom: 20px;
+    }
+
+    /* ============ THE WIDGET ITSELF ============ */
+    .card {
+        background-color: #111a2e;
+        border: 1px solid #1e293b;
+        border-radius: 6px;
+        padding: 18px;
+        margin-bottom: 20px;
+    }
+
+    .section-title {
+        color: #38bdf8;
+        margin: 0 0 14px 0;
+        border-bottom: 2px solid #1d4ed8;
+        padding-bottom: 6px;
+        font-size: 1rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .hs-top-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 14px;
+    }
+
+    /* Glowing beacon dot — color + glow driven by data-state */
+    .hs-beacon {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        background: var(--state-color, #64748b);
+        box-shadow: 0 0 10px 2px var(--state-color, #64748b);
+        transition: background 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    .hs-state-label {
+        font-weight: bold;
+        font-size: 1.05rem;
+        letter-spacing: 1px;
+        color: var(--state-color, #64748b);
+        transition: color 0.4s ease;
+    }
+
+    .hs-time {
+        margin-left: auto;
+        font-size: 0.75rem;
+        color: #64748b;
+    }
+
+    /* Detail rows — colored to match state when there's something to show */
+    .hs-detail {
+        font-size: 0.95rem;
+        line-height: 1.7;
+        padding-left: 28px;
+        color: var(--state-color, #64748b);
+        transition: color 0.4s ease;
+        min-height: 1.4em;
+    }
+
+    .hs-detail .label {
+        color: #64748b;
+        font-weight: normal;
+        margin-right: 6px;
+    }
+
+    .hs-message {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px dashed #334155;
+        font-style: italic;
+        font-size: 0.85rem;
+        color: #cbd5e1;
+        text-align: center;
+    }
+
+    /* ============ TEST CONTROLS (not part of the widget) ============ */
+    .controls {
+        background-color: #111a2e;
+        border: 1px solid #1e293b;
+        border-radius: 6px;
+        padding: 16px;
+    }
+
+    .controls h2 {
+        font-size: 0.85rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin: 0 0 10px 0;
+    }
+
+    .controls button {
+        background-color: #1e293b;
+        color: #ffffff;
+        border: 1px solid #334155;
+        padding: 8px 12px;
+        margin: 0 8px 8px 0;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .controls button:hover {
+        background-color: #334155;
+    }
+
+    .controls button.live {
+        border-color: #38bdf8;
+        color: #38bdf8;
+    }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+    <h1>HamStatus Widget — Concept Test</h1>
+    <div class="subtext">Standalone test page. Nothing here touches index.html — use the buttons below to preview each state.</div>
+
+    <div class="card">
+        <div class="section-title">On The Air</div>
+        <div id="hs-widget">
+            <div class="hs-top-row">
+                <span class="hs-beacon" id="hs-beacon"></span>
+                <span class="hs-state-label" id="hs-state-label">OFF AIR</span>
+                <span class="hs-time" id="hs-time">--</span>
+            </div>
+            <div class="hs-detail" id="hs-detail-1">
+                <span class="label">Activity</span><span id="hs-activity">--</span>
+            </div>
+            <div class="hs-detail" id="hs-detail-2">
+                <span class="label" id="hs-freqtg-label">Frequency</span><span id="hs-freqtg">--</span>
+            </div>
+            <div class="hs-detail" id="hs-detail-3">
+                <span class="label">Mode</span><span id="hs-mode">--</span>
+            </div>
+            <div class="hs-message" id="hs-message">No status set.</div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <h2>Simulate a state</h2>
+        <button onclick="renderState('on_air')">🟢 On Air</button>
+        <button onclick="renderState('monitoring')">🟡 Monitoring</button>
+        <button onclick="renderState('off_air')">⚪ Off Air</button>
+        <button class="live" onclick="fetchHamStatus()">📡 Fetch Live status.json</button>
+    </div>
+</div>
+
+<script>
+    // Color per state — tweak these three lines to try different palettes
+    const HS_STATE_COLORS = {
+        on_air:     { label: 'ON AIR',     color: '#2ecc71' }, // green
+        monitoring: { label: 'MONITORING', color: '#f0ad4e' }, // amber
+        off_air:    { label: 'OFF AIR',    color: '#64748b' }  // gray
+    };
+
+    // Sample payloads standing in for status.json, so you can preview
+    // every state instantly without touching the real file.
+    const SAMPLE_DATA = {
+        on_air: {
+            state: 'on_air', activity: 'POTA Activation', mode: 'SSB',
+            frequency: { value: 14.285, unit: 'MHz' },
+            custom_message: 'Working a pileup on 20m!',
+            last_updated: new Date().toISOString()
+        },
+        monitoring: {
+            state: 'monitoring', activity: 'Listening', mode: 'DMR',
+            talkgroup: 3129, talkgroup_name: 'Missouri',
+            custom_message: 'Hotspot on, standing by.',
+            last_updated: new Date().toISOString()
+        },
+        off_air: {
+            state: 'off_air', activity: '--', mode: '--',
+            custom_message: 'No active operating status.',
+            last_updated: new Date().toISOString()
+        }
+    };
+
+    function applyState(data) {
+        const state = data.state || 'off_air';
+        const info = HS_STATE_COLORS[state] || HS_STATE_COLORS.off_air;
+
+        document.getElementById('hs-widget').style.setProperty('--state-color', info.color);
+        document.getElementById('hs-state-label').textContent = info.label;
+        document.getElementById('hs-activity').textContent = data.activity || '--';
+        document.getElementById('hs-mode').textContent = data.mode || '--';
+        document.getElementById('hs-message').textContent = data.custom_message || 'No status set.';
+
+        const freqTgLabel = document.getElementById('hs-freqtg-label');
+        const freqTg = document.getElementById('hs-freqtg');
+        if (data.mode === 'DMR' && data.talkgroup) {
+            freqTgLabel.textContent = 'Talkgroup';
+            freqTg.textContent = data.talkgroup_name && data.talkgroup_name !== String(data.talkgroup)
+                ? `TG ${data.talkgroup} - ${data.talkgroup_name}`
+                : `TG ${data.talkgroup}`;
+        } else if (data.reflector) {
+            freqTgLabel.textContent = 'Reflector';
+            freqTg.textContent = data.reflector;
+        } else {
+            freqTgLabel.textContent = 'Frequency';
+            const freq = (data.frequency && typeof data.frequency === 'object')
+                ? data.frequency
+                : { value: data.frequency, unit: 'MHz' };
+            freqTg.textContent = freq.value ? `${freq.value} ${freq.unit || 'MHz'}` : '--';
+        }
+
+        const updateTime = data.last_updated ? new Date(data.last_updated) : new Date();
+        document.getElementById('hs-time').textContent =
+            updateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    // Preview button handler — uses local sample data, no network call
+    function renderState(state) {
+        applyState(SAMPLE_DATA[state]);
+    }
+
+    // Real fetch, same endpoint the live widget uses, hardened the same way
+    async function fetchHamStatus() {
+        try {
+            const response = await fetch('https://will-83.github.io/hamstatus/status.json?t=' + Date.now(), { cache: 'no-store' });
+            if (!response.ok) throw new Error('Network response was not ok');
+            const data = await response.json();
+            applyState(data);
+        } catch (error) {
+            console.error('Error fetching HamStatus:', error);
+            document.getElementById('hs-message').textContent = 'Unable to load live status.';
+        }
+    }
+
+    // Start on off_air so the page has something sensible on load
+    renderState('off_air');
+</script>
+</body>
+</html>
