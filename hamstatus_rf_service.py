@@ -103,9 +103,9 @@ def lookup_tg_name(tg_id, list_path):
     return _tg_list_caches.get(list_path, {}).get(tg_id, str(tg_id))
 
 
-START_RE = re.compile(r"received RF voice header from (\S+) to (.+)")
-END_RE = re.compile(r"received RF end of voice transmission from (\S+) to (.+?), ([\d.]+) seconds")
-LOST_RE = re.compile(r"RF voice transmission lost from (\S+) to (.+?), ([\d.]+) seconds")
+START_RE = re.compile(r"received (?:RF|network) voice header from (\S+) to (.+)")
+END_RE = re.compile(r"received (?:RF|network) end of voice transmission from (\S+) to (.+?), ([\d.]+) seconds")
+LOST_RE = re.compile(r"(?:RF|network) voice transmission lost from (\S+) to (.+?), ([\d.]+) seconds")
 TG_RE = re.compile(r"^TG (\d+)$")
 
 state_lock = threading.Lock()
