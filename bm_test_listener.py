@@ -32,6 +32,9 @@ sio = socketio.Client()
 
 @sio.event
 def connect():
+    # Brandmeister requires an explicit subscribe after connecting -- without
+    # this the socket connects fine but silently never receives any events.
+    sio.emit("join", "everything")
     print(f"Connected. Listening for DMR ID {WATCHED_ID}... (Ctrl+C to stop)")
 
 

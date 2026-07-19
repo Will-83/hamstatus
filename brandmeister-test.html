@@ -119,6 +119,10 @@
     });
 
     socket.on('connect', () => {
+      // Brandmeister requires an explicit subscribe after connecting --
+      // without this the socket connects fine but silently never receives
+      // any events.
+      socket.emit('join', 'everything');
       setStatus('Connected — listening for ID ' + watchedId, 'connected');
       btn.disabled = false;
       btn.textContent = 'Reconnect';
