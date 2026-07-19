@@ -17,15 +17,15 @@
   "custom_message": "",
   "last_updated": "2026-07-18T15:27:56.667Z",
   "aprs": {
-    "last_beacon": "2026-07-19T03:40:59Z",
+    "last_beacon": "2026-07-19T03:52:29Z",
     "position": {
       "lat": 37.1,
       "lon": -92.57
     },
     "symbol": "/P",
-    "course": null,
-    "speed_mph": null,
-    "altitude_ft": 1369,
+    "course": 346,
+    "speed_mph": 0,
+    "altitude_ft": 1372,
     "comment": "",
     "last_message": {
       "to": "W8MB",
