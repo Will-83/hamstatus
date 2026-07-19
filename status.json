@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "callsign": "W8MB",
-  "state": "on_air",
-  "activity": "31665",
+  "state": "monitoring",
+  "activity": "Listening",
   "frequency": {
     "value": "Local",
     "unit": "MHz",
@@ -14,8 +14,8 @@
     "grid_square": "EM37",
     "reference": "Local Repeater"
   },
-  "custom_message": "Transmitting on 31665",
-  "last_updated": "2026-07-19T15:06:42Z",
+  "custom_message": "Just wrapped up -- still listening.",
+  "last_updated": "2026-07-19T15:07:13Z",
   "aprs": {
     "last_beacon": "2026-07-19T03:52:29Z",
     "position": {
