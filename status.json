@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "callsign": "W8MB",
-  "state": "monitoring",
-  "activity": "Listening",
+  "state": "on_air",
+  "activity": "32592",
   "frequency": {
     "value": "Local",
     "unit": "MHz",
@@ -14,8 +14,8 @@
     "grid_square": "EM37",
     "reference": "Local Repeater"
   },
-  "custom_message": "Just wrapped up -- still listening.",
-  "last_updated": "2026-07-19T15:30:04Z",
+  "custom_message": "Transmitting on 32592",
+  "last_updated": "2026-07-19T15:31:31Z",
   "aprs": {
     "last_beacon": "2026-07-19T15:23:39Z",
     "position": {
@@ -33,7 +33,7 @@
       "time": "2026-07-19T02:55:17Z"
     }
   },
-  "talkgroup": 31665,
-  "talkgroup_name": "31665",
-  "network": "TGIF"
+  "talkgroup": 32592,
+  "talkgroup_name": "32592",
+  "network": "DMR2YSF"
 }
