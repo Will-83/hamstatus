@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "callsign": "W8MB",
-  "state": "off_air",
-  "activity": "Listening",
+  "state": "on_air",
+  "activity": "31665",
   "frequency": {
     "value": "Local",
     "unit": "MHz",
@@ -14,8 +14,8 @@
     "grid_square": "EM37",
     "reference": "Local Repeater"
   },
-  "custom_message": "Monitoring the local repeater. Drop a call!",
-  "last_updated": "2026-07-19T15:22:35Z",
+  "custom_message": "Transmitting on 31665",
+  "last_updated": "2026-07-19T15:29:33Z",
   "aprs": {
     "last_beacon": "2026-07-19T15:23:39Z",
     "position": {
@@ -32,5 +32,8 @@
       "text": "Test message{2",
       "time": "2026-07-19T02:55:17Z"
     }
-  }
+  },
+  "talkgroup": 31665,
+  "talkgroup_name": "31665",
+  "network": "TGIF"
 }
