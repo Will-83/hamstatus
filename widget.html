@@ -106,6 +106,21 @@
   body.size-compact .msg { display: none; }
   body.size-compact .freq { font-size: 1.3rem; }
 
+  .aprs-section {
+    margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--fg-dim);
+    font-size: 0.68rem;
+  }
+  .aprs-row { display: flex; justify-content: space-between; align-items: center; }
+  .aprs-label { color: var(--fg-muted); letter-spacing: 0.5px; }
+  .aprs-dot {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--fg-dim); margin-right: 5px;
+  }
+  .aprs-dot.active { background: var(--fg); }
+  .aprs-comment { color: var(--fg-muted); margin-top: 2px; font-style: italic; }
+  .aprs-msg { color: var(--fg-muted); margin-top: 2px; font-size: 0.64rem; opacity: 0.85; }
+  body.size-compact .aprs-msg { display: none; }
+
   .error-state { color: var(--fg-muted); font-size: 0.75rem; text-align: center; padding: 10px 0; }
 </style>
 </head>
@@ -126,6 +141,14 @@
     <div class="footer">
       <span class="status-word" id="statusword">OFF AIR</span>
       <span id="updated">--</span>
+    </div>
+    <div class="aprs-section" id="aprsSection" style="display:none;">
+      <div class="aprs-row">
+        <span class="aprs-label"><span class="aprs-dot" id="aprsDot"></span>APRS</span>
+        <span id="aprsAgo">--</span>
+      </div>
+      <div class="aprs-comment" id="aprsComment"></div>
+      <div class="aprs-msg" id="aprsMsg"></div>
     </div>
   </div>
 
@@ -195,6 +218,26 @@
       el('opmode').textContent = data.activity || data.operating_mode || '';
       el('msg').textContent = data.custom_message || '';
       el('updated').textContent = data.last_updated ? timeAgo(data.last_updated) : '--';
+
+      // APRS section is purely additive -- shown underneath everything else,
+      // and only at all if the aprs service has ever actually reported in.
+      const APRS_STALE_MINUTES = 60;
+      if (data.aprs && data.aprs.last_beacon) {
+        el('aprsSection').style.display = '';
+        const ageMs = Date.now() - new Date(data.aprs.last_beacon).getTime();
+        el('aprsDot').classList.toggle('active', ageMs < APRS_STALE_MINUTES * 60000);
+        el('aprsAgo').textContent = timeAgo(data.aprs.last_beacon);
+        el('aprsComment').textContent = data.aprs.comment || '';
+        el('aprsComment').style.display = data.aprs.comment ? '' : 'none';
+        if (data.aprs.last_message && data.aprs.last_message.text) {
+          el('aprsMsg').textContent = `\u2192 ${data.aprs.last_message.to}: ${data.aprs.last_message.text}`;
+          el('aprsMsg').style.display = '';
+        } else {
+          el('aprsMsg').style.display = 'none';
+        }
+      } else {
+        el('aprsSection').style.display = 'none';
+      }
 
       const widget = el('widget');
       widget.setAttribute('data-state', state);
