@@ -35,15 +35,12 @@ LOG_DIR = "/var/log/pi-star"
 MONITORING_AFTER = 30    # seconds of silence before dropping to "monitoring"
 OFF_AIR_AFTER = 120      # seconds of silence before dropping to "off_air"
 
-# Your primary DMR master -- this is static since the local log doesn't tell us
-# which external network a given talkgroup actually belongs to. Change if
-# BrandMeister isn't your main master.
-NETWORK_NAME = "BrandMeister"
-
-# WPSD downloads this itself (refreshed by its nightly update process) --
-# it's BrandMeister's full talkgroup/reflector list, semicolon-delimited:
+# WPSD downloads these itself (refreshed by its nightly update process) --
+# each is a network's full talkgroup/reflector list, semicolon-delimited:
 # Dest ID;Option;Name;Description  (Option: TG=0, REF=1, PC=2)
-TG_LIST_PATH = "/usr/local/etc/TGList_BM.txt"
+TG_LIST_BM_PATH = "/usr/local/etc/TGList_BM.txt"
+TG_LIST_TGIF_PATH = "/usr/local/etc/TGList_TGIF.txt"
+TG_LIST_YSF_PATH = "/usr/local/etc/TGList_YSF.txt"
 
 # Default comment shown per state -- editable to taste. {name} is replaced
 # with the talkgroup's friendly name when there is one.
@@ -52,30 +49,31 @@ MSG_ON_AIR_PRIVATE = "Transmitting"
 MSG_MONITORING = "Just wrapped up -- still listening."
 MSG_OFF_AIR = "Monitoring the local repeater. Drop a call!"
 
-# Manual overrides/additions -- checked BEFORE the downloaded list, so use
-# this for anything not covered there (e.g. TGIF-specific talkgroups, since
-# TGList_BM.txt is BrandMeister-only) or to override a name you don't like.
+# Manual overrides/additions -- checked BEFORE any downloaded list, so use
+# this to override a name you don't like, or add one that's missing from
+# the relevant TGList file entirely.
 TG_NAMES = {}
 
-_tg_list_cache = {}
-_tg_list_mtime = None
+# One mtime/name cache per list file, keyed by path -- lets load_tg_list()
+# stay a single small function instead of three near-identical copies.
+_tg_list_caches = {}   # path -> {tg_id: name}
+_tg_list_mtimes = {}   # path -> mtime float
 
 
-def load_tg_list():
-    """(Re)loads TG_LIST_PATH if it exists and has changed since last load.
-    Safe to call often -- it's a cheap no-op when the file is unchanged, and
-    fails quietly (keeping whatever was already cached) if it's missing."""
-    global _tg_list_cache, _tg_list_mtime
+def load_tg_list(path):
+    """(Re)loads the given TGList file if it exists and has changed since
+    last load. Safe to call often -- cheap no-op when unchanged, fails
+    quietly (keeping whatever was already cached) if the file is missing."""
     try:
-        mtime = os.path.getmtime(TG_LIST_PATH)
+        mtime = os.path.getmtime(path)
     except OSError:
         return
-    if mtime == _tg_list_mtime:
+    if _tg_list_mtimes.get(path) == mtime:
         return
 
     names = {}
     try:
-        with open(TG_LIST_PATH, "r", encoding="utf-8", errors="replace") as f:
+        with open(path, "r", encoding="utf-8", errors="replace") as f:
             for line in f:
                 line = line.strip()
                 if not line or line.startswith("#"):
@@ -93,16 +91,17 @@ def load_tg_list():
     except OSError:
         return
 
-    _tg_list_cache = names
-    _tg_list_mtime = mtime
-    print(f"[tg list] loaded {len(names)} talkgroup names from {TG_LIST_PATH}")
+    _tg_list_caches[path] = names
+    _tg_list_mtimes[path] = mtime
+    print(f"[tg list] loaded {len(names)} names from {path}")
 
 
-def lookup_tg_name(tg_id):
+def lookup_tg_name(tg_id, list_path):
     if tg_id in TG_NAMES:
         return TG_NAMES[tg_id]
-    load_tg_list()
-    return _tg_list_cache.get(tg_id, str(tg_id))
+    load_tg_list(list_path)
+    return _tg_list_caches.get(list_path, {}).get(tg_id, str(tg_id))
+
 
 START_RE = re.compile(r"received RF voice header from (\S+) to (.+)")
 END_RE = re.compile(r"received RF end of voice transmission from (\S+) to (.+?), ([\d.]+) seconds")
@@ -115,13 +114,36 @@ pending_timers = []
 
 
 def parse_talkgroup(destination_text):
-    """Returns (tg_id, tg_name) for a group-call destination like 'TG 31291',
-    or (None, None) for anything else (e.g. a private call to a radio ID)."""
+    """Returns (tg_id, tg_name, network) for a group-call destination like
+    'TG 31291', or (None, None, None) for anything else (e.g. a private call
+    to a radio ID).
+
+    WPSD/DMRGateway encode which network a call is bridged to directly in
+    the TG number: a leading 5 means TGIF, a leading 7 means DMR2YSF, both
+    followed by the real TG/reflector number (zero-padded to fill out a
+    7-digit total). Anything else is a plain BrandMeister talkgroup. This
+    means the network can be determined from the MMDVM log alone, with no
+    need to also read DMRGateway.log.
+
+    Known gap: FCS reflectors reached via DMR2YSF use a further "100"-prefixed
+    sub-code within the 6-digit field (e.g. 7100290 = FCS2-90) that isn't
+    decoded here yet -- untested, so it's left as a raw number for now rather
+    than guessed at.
+    """
     m = TG_RE.match(destination_text.strip())
     if not m:
-        return None, None
-    tg_id = int(m.group(1))
-    return tg_id, lookup_tg_name(tg_id)
+        return None, None, None
+
+    raw = m.group(1)
+    if len(raw) == 7 and raw[0] == "5":
+        tg_id = int(raw[1:])
+        return tg_id, lookup_tg_name(tg_id, TG_LIST_TGIF_PATH), "TGIF"
+    if len(raw) == 7 and raw[0] == "7":
+        tg_id = int(raw[1:])
+        return tg_id, lookup_tg_name(tg_id, TG_LIST_YSF_PATH), "DMR2YSF"
+
+    tg_id = int(raw)
+    return tg_id, lookup_tg_name(tg_id, TG_LIST_BM_PATH), "BrandMeister"
 
 
 # ---------------------------------------------------------------- GitHub API
@@ -206,10 +228,10 @@ def schedule_transition(delay, new_state, extra_fields=None, remove_fields=None)
 
 def on_keyup(tg_text):
     cancel_pending_timers()
-    tg_id, tg_name = parse_talkgroup(tg_text)
+    tg_id, tg_name, network = parse_talkgroup(tg_text)
     extra = {"mode": "DMR", "activity": tg_name or tg_text}
     if tg_id is not None:
-        extra.update({"talkgroup": tg_id, "talkgroup_name": tg_name, "network": NETWORK_NAME})
+        extra.update({"talkgroup": tg_id, "talkgroup_name": tg_name, "network": network})
         extra["custom_message"] = MSG_ON_AIR_TG.format(name=tg_name)
     else:
         extra["custom_message"] = MSG_ON_AIR_PRIVATE
