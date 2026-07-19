@@ -2,7 +2,7 @@
   "version": "1.0",
   "callsign": "W8MB",
   "state": "on_air",
-  "activity": "US-America Link",
+  "activity": "TGIF The Mothership",
   "frequency": {
     "value": "Local",
     "unit": "MHz",
@@ -14,8 +14,8 @@
     "grid_square": "EM37",
     "reference": "Local Repeater"
   },
-  "custom_message": "Transmitting on US-America Link",
-  "last_updated": "2026-07-19T19:00:16Z",
+  "custom_message": "Transmitting on TGIF The Mothership",
+  "last_updated": "2026-07-19T19:00:29Z",
   "aprs": {
     "last_beacon": "2026-07-19T18:56:59Z",
     "position": {
@@ -40,7 +40,7 @@
     "network": "BrandMeister",
     "time": "2026-07-19T18:57:16Z"
   },
-  "talkgroup": 32592,
-  "talkgroup_name": "US-America Link",
-  "network": "DMR2YSF"
+  "talkgroup": 31665,
+  "talkgroup_name": "TGIF The Mothership",
+  "network": "TGIF"
 }
