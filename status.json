@@ -26,6 +26,11 @@
     "course": null,
     "speed_mph": null,
     "altitude_ft": 1359,
-    "comment": ""
+    "comment": "",
+    "last_message": {
+      "to": "W8MB",
+      "text": "Test message{2",
+      "time": "2026-07-19T02:23:45Z"
+    }
   }
 }
