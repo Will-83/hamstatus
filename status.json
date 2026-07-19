@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "callsign": "W8MB",
-  "state": "on_air",
-  "activity": "US-America Link",
+  "state": "monitoring",
+  "activity": "Listening",
   "frequency": {
     "value": "Local",
     "unit": "MHz",
@@ -14,8 +14,8 @@
     "grid_square": "EM37",
     "reference": "Local Repeater"
   },
-  "custom_message": "Transmitting on US-America Link",
-  "last_updated": "2026-07-19T16:48:00Z",
+  "custom_message": "Just wrapped up -- still listening.",
+  "last_updated": "2026-07-19T16:48:31Z",
   "aprs": {
     "last_beacon": "2026-07-19T16:47:25Z",
     "position": {
