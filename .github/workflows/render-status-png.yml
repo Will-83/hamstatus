@@ -32,9 +32,21 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add status.png
-          if ! git diff --staged --quiet; then
-            git commit -m "Auto-render status.png [skip ci]"
-            git push
-          else
+          if git diff --staged --quiet; then
             echo "status.png unchanged, nothing to commit"
+            exit 0
           fi
+          git commit -m "Auto-render status.png [skip ci]"
+
+          # status.json (and this workflow) can fire again before this run
+          # finishes, so main may have moved since checkout -- retry with a
+          # rebase instead of failing outright on a non-fast-forward push.
+          for attempt in 1 2 3 4 5; do
+            if git push; then
+              exit 0
+            fi
+            echo "Push rejected (attempt $attempt/5), pulling and retrying..."
+            git pull --rebase origin "${{ github.ref_name }}"
+          done
+          echo "Failed to push after 5 attempts"
+          exit 1
