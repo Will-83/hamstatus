@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "callsign": "W8MB",
-  "state": "off_air",
-  "activity": "Listening",
+  "state": "on_air",
+  "activity": "TG N0NMS",
   "frequency": {
     "value": "Local",
     "unit": "MHz",
@@ -14,8 +14,8 @@
     "grid_square": "EM37",
     "reference": "Local Repeater"
   },
-  "custom_message": "Monitoring the local repeater. Drop a call!",
-  "last_updated": "2026-07-19T19:04:33Z",
+  "custom_message": "Transmitting",
+  "last_updated": "2026-07-19T19:13:11Z",
   "aprs": {
     "last_beacon": "2026-07-19T18:56:59Z",
     "position": {
