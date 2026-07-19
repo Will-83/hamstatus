@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "callsign": "W8MB",
-  "state": "on_air",
-  "activity": "SWMO",
+  "state": "monitoring",
+  "activity": "Listening",
   "frequency": {
     "value": "Local",
     "unit": "MHz",
@@ -14,8 +14,8 @@
     "grid_square": "EM37",
     "reference": "Local Repeater"
   },
-  "custom_message": "Transmitting on SWMO",
-  "last_updated": "2026-07-19T18:55:15Z",
+  "custom_message": "Just wrapped up -- still listening.",
+  "last_updated": "2026-07-19T18:55:46Z",
   "aprs": {
     "last_beacon": "2026-07-19T18:52:02Z",
     "position": {
