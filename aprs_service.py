@@ -138,21 +138,34 @@ def github_put(new_data, sha):
         return json.loads(resp.read())
 
 
+MAX_CONFLICT_RETRIES = 3
+
+
 def update_aprs_section(patch):
     """Merges `patch` into status.json's top-level "aprs" object, leaving
     every other field (state, mode, talkgroup, etc.) completely untouched."""
-    try:
-        current = github_get()
-        data = json.loads(base64.b64decode(current["content"]).decode("utf-8"))
-        aprs = data.get("aprs", {})
-        aprs.update(patch)
-        data["aprs"] = aprs
-        github_put(data, current["sha"])
-        print(f"[status.json] aprs -> {patch}")
-    except urllib.error.HTTPError as e:
-        print(f"[error] GitHub API returned {e.code}: {e.reason}")
-    except Exception as e:
-        print(f"[error] failed to update status.json: {e}")
+    for attempt in range(1, MAX_CONFLICT_RETRIES + 1):
+        try:
+            current = github_get()
+            data = json.loads(base64.b64decode(current["content"]).decode("utf-8"))
+            aprs = data.get("aprs", {})
+            aprs.update(patch)
+            data["aprs"] = aprs
+            github_put(data, current["sha"])
+            print(f"[status.json] aprs -> {patch}")
+            return
+        except urllib.error.HTTPError as e:
+            if e.code == 409 and attempt < MAX_CONFLICT_RETRIES:
+                # Another writer (the RF service, most likely) updated
+                # status.json between our GET and PUT -- re-fetch and retry
+                # with the current sha rather than dropping this update.
+                print(f"[retry] status.json changed elsewhere (409), re-fetching and retrying ({attempt}/{MAX_CONFLICT_RETRIES})")
+                continue
+            print(f"[error] GitHub API returned {e.code}: {e.reason}")
+            return
+        except Exception as e:
+            print(f"[error] failed to update status.json: {e}")
+            return
 
 
 # -------------------------------------------------------------- Packet handling

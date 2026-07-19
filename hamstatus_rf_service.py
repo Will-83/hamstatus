@@ -186,30 +186,45 @@ def github_put(new_data, sha):
 
 # ------------------------------------------------------------- State machine
 
+MAX_CONFLICT_RETRIES = 3
+
+
 def set_state(new_state, extra_fields=None, remove_fields=None):
     global current_state
     with state_lock:
         if new_state == current_state and not extra_fields and not remove_fields:
             return
-        try:
-            current = github_get()
-            data = json.loads(base64.b64decode(current["content"]).decode("utf-8"))
-            data["state"] = new_state
-            if extra_fields:
-                data.update(extra_fields)
-            if remove_fields:
-                for key in remove_fields:
-                    data.pop(key, None)
-            data["last_updated"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-            github_put(data, current["sha"])
-            current_state = new_state
-            detail = f" +{extra_fields}" if extra_fields else ""
-            detail += f" -{remove_fields}" if remove_fields else ""
-            print(f"[status.json] state -> {new_state}{detail}")
-        except urllib.error.HTTPError as e:
-            print(f"[error] GitHub API returned {e.code}: {e.reason}")
-        except Exception as e:
-            print(f"[error] failed to update status.json: {e}")
+
+        for attempt in range(1, MAX_CONFLICT_RETRIES + 1):
+            try:
+                current = github_get()
+                data = json.loads(base64.b64decode(current["content"]).decode("utf-8"))
+                data["state"] = new_state
+                if extra_fields:
+                    data.update(extra_fields)
+                if remove_fields:
+                    for key in remove_fields:
+                        data.pop(key, None)
+                data["last_updated"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+                github_put(data, current["sha"])
+                current_state = new_state
+                detail = f" +{extra_fields}" if extra_fields else ""
+                detail += f" -{remove_fields}" if remove_fields else ""
+                print(f"[status.json] state -> {new_state}{detail}")
+                return
+            except urllib.error.HTTPError as e:
+                if e.code == 409 and attempt < MAX_CONFLICT_RETRIES:
+                    # Another writer (the APRS service, most likely) updated
+                    # status.json between our GET and PUT. Re-fetching gets
+                    # the current sha, so simply retrying the whole cycle
+                    # resolves this rather than dropping the update.
+                    print(f"[retry] status.json changed elsewhere (409), re-fetching and retrying ({attempt}/{MAX_CONFLICT_RETRIES})")
+                    continue
+                print(f"[error] GitHub API returned {e.code}: {e.reason}")
+                return
+            except Exception as e:
+                print(f"[error] failed to update status.json: {e}")
+                return
 
 
 def cancel_pending_timers():
