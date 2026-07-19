@@ -26,10 +26,15 @@ APRS_IS_HOST = "rotate.aprs2.net"
 APRS_IS_PORT = 14580
 
 # Uncompressed position report: DDMM.MMn/DDDMM.MMe SYMBOL comment
+# Minutes digits can be blank spaces instead of numbers -- that's APRS's
+# built-in "position ambiguity" feature for deliberately reduced precision,
+# not malformed data, so spaces have to be accepted here, not just digits.
 POS_RE = re.compile(
-    r"^(\d{2})(\d{2}\.\d{2})([NS])(.)(\d{3})(\d{2}\.\d{2})([EW])(.)(.*)$"
+    r"^(\d{2})([\d ]{2}\.[\d ]{2})([NS])(.)(\d{3})([\d ]{2}\.[\d ]{2})([EW])(.)(.*)$"
 )
 MSG_RE = re.compile(r"^:([A-Z0-9\- ]{9}):(.*)$")
+COURSE_SPEED_RE = re.compile(r"^(\d{3})/(\d{3})")
+ALTITUDE_RE = re.compile(r"/A=(\d{6})")
 
 
 def decode_position(payload):
@@ -37,18 +42,43 @@ def decode_position(payload):
     if not m:
         return None
     lat_deg, lat_min, lat_hem, sym_table, lon_deg, lon_min, lon_hem, sym_code, comment = m.groups()
-    lat = int(lat_deg) + float(lat_min) / 60
+
+    ambiguous = " " in lat_min or " " in lon_min
+    # Blanked digits mean "unknown at this precision" -- treating them as 0
+    # gives the best available estimate, not a false-precision exact value.
+    lat_min_val = float(lat_min.replace(" ", "0"))
+    lon_min_val = float(lon_min.replace(" ", "0"))
+
+    lat = int(lat_deg) + lat_min_val / 60
     if lat_hem == "S":
         lat = -lat
-    lon = int(lon_deg) + float(lon_min) / 60
+    lon = int(lon_deg) + lon_min_val / 60
     if lon_hem == "W":
         lon = -lon
-    # Strip a trailing message-id-looking suffix isn't needed here -- comment is free text
+
+    # Comment field often carries extra APRS extensions before the free text:
+    # a leading "course/speed" (e.g. "000/000") and/or an "/A=NNNNNN" altitude
+    # in feet, anywhere in the string. Pull those out rather than leaving them
+    # jumbled into what's meant to be a human-readable comment.
+    course = speed = altitude_ft = None
+    cs_match = COURSE_SPEED_RE.match(comment)
+    if cs_match:
+        course, speed = int(cs_match.group(1)), int(cs_match.group(2))
+        comment = comment[cs_match.end():]
+    alt_match = ALTITUDE_RE.search(comment)
+    if alt_match:
+        altitude_ft = int(alt_match.group(1))
+        comment = comment[:alt_match.start()] + comment[alt_match.end():]
+
     return {
         "lat": round(lat, 4),
         "lon": round(lon, 4),
+        "position_ambiguous": ambiguous,
         "symbol_table": sym_table,
         "symbol_code": sym_code,
+        "course": course,
+        "speed_mph": speed,
+        "altitude_ft": altitude_ft,
         "comment": comment.strip(),
     }
 
@@ -88,8 +118,17 @@ def handle_line(line, callsign):
             body = body[7:]
         pos = decode_position(body)
         if pos:
-            print(f"\U0001F4CD BEACON from {source} -> lat={pos['lat']}, lon={pos['lon']}, "
-                  f"symbol={pos['symbol_table']}{pos['symbol_code']}, comment=\"{pos['comment']}\"")
+            precision = " (reduced precision)" if pos["position_ambiguous"] else ""
+            extras = []
+            if pos["course"] is not None:
+                extras.append(f"course={pos['course']}\u00b0")
+            if pos["speed_mph"] is not None:
+                extras.append(f"speed={pos['speed_mph']}mph")
+            if pos["altitude_ft"] is not None:
+                extras.append(f"alt={pos['altitude_ft']}ft")
+            extra_str = f", {', '.join(extras)}" if extras else ""
+            print(f"\U0001F4CD BEACON from {source} -> lat={pos['lat']}, lon={pos['lon']}{precision}, "
+                  f"symbol={pos['symbol_table']}{pos['symbol_code']}{extra_str}, comment=\"{pos['comment']}\"")
         else:
             print(f"\U0001F4CD BEACON from {source} (position format not decoded): {payload}")
 
