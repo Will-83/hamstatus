@@ -16,6 +16,14 @@
   <div class="hs-footer">
     Last updated: <span id="hs-time">--</span>
   </div>
+  <div class="hs-aprs" id="hs-aprs-section" style="display:none;">
+    <div class="hs-aprs-row">
+      <span><span class="hs-aprs-dot" id="hs-aprs-dot"></span>APRS</span>
+      <span id="hs-aprs-ago">--</span>
+    </div>
+    <div class="hs-aprs-comment" id="hs-aprs-comment"></div>
+    <div class="hs-aprs-msg" id="hs-aprs-msg"></div>
+  </div>
 </div>
 
 <!-- Simple Styling to make it look sharp -->
@@ -58,11 +66,33 @@
     color: #777;
     border-top: 1px solid #282828;
   }
+  .hs-aprs {
+    padding: 10px 15px 12px;
+    font-size: 0.8rem;
+    border-top: 1px solid #282828;
+  }
+  .hs-aprs-row { display: flex; justify-content: space-between; color: #aaa; }
+  .hs-aprs-dot {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: #555; margin-right: 6px;
+  }
+  .hs-aprs-dot.active { background: #2ecc71; }
+  .hs-aprs-comment { color: #888; font-style: italic; margin-top: 3px; }
+  .hs-aprs-msg { color: #777; font-size: 0.75rem; margin-top: 3px; }
 </style>
 
 <!-- The JavaScript Magic -->
 <script>
   const HS_STATE_LABELS = { on_air: 'On Air', monitoring: 'Monitoring', off_air: 'Offline' };
+
+  function hsTimeAgo(iso) {
+    const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return mins + 'm ago';
+    const hrs = Math.round(mins / 60);
+    if (hrs < 24) return hrs + 'h ago';
+    return Math.round(hrs / 24) + 'd ago';
+  }
 
   async function fetchHamStatus() {
     try {
@@ -112,6 +142,29 @@
       const indicator = document.getElementById('hs-indicator');
       indicator.textContent = HS_STATE_LABELS[state] || state;
       indicator.className = 'hs-indicator ' + (state === 'on_air' ? 'active' : state === 'monitoring' ? 'monitoring' : 'offline');
+
+      // APRS section is purely additive -- only shown at all once the aprs
+      // service has actually reported in at least once.
+      const APRS_STALE_MINUTES = 60;
+      const aprsSection = document.getElementById('hs-aprs-section');
+      if (data.aprs && data.aprs.last_beacon) {
+        aprsSection.style.display = '';
+        const ageMs = Date.now() - new Date(data.aprs.last_beacon).getTime();
+        document.getElementById('hs-aprs-dot').classList.toggle('active', ageMs < APRS_STALE_MINUTES * 60000);
+        document.getElementById('hs-aprs-ago').textContent = hsTimeAgo(data.aprs.last_beacon);
+        const commentEl = document.getElementById('hs-aprs-comment');
+        commentEl.textContent = data.aprs.comment || '';
+        commentEl.style.display = data.aprs.comment ? '' : 'none';
+        const msgEl = document.getElementById('hs-aprs-msg');
+        if (data.aprs.last_message && data.aprs.last_message.text) {
+          msgEl.textContent = `\u2192 ${data.aprs.last_message.to}: ${data.aprs.last_message.text}`;
+          msgEl.style.display = '';
+        } else {
+          msgEl.style.display = 'none';
+        }
+      } else {
+        aprsSection.style.display = 'none';
+      }
     } catch (error) {
       console.error('Error fetching HamStatus:', error);
     }
