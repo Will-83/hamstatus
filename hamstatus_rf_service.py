@@ -63,7 +63,11 @@ _tg_list_mtimes = {}   # path -> mtime float
 def load_tg_list(path):
     """(Re)loads the given TGList file if it exists and has changed since
     last load. Safe to call often -- cheap no-op when unchanged, fails
-    quietly (keeping whatever was already cached) if the file is missing."""
+    quietly (keeping whatever was already cached) if the file is missing.
+
+    Handles two formats seen in the wild: BrandMeister's TGList_BM.txt is
+    "ID;Option;Name;Description" (name in field 3); WPSD's own TGIF/YSF
+    cross-reference files are just "ID;Name" (name in field 2)."""
     try:
         mtime = os.path.getmtime(path)
     except OSError:
@@ -79,15 +83,15 @@ def load_tg_list(path):
                 if not line or line.startswith("#"):
                     continue
                 parts = line.split(";")
-                if len(parts) < 3:
+                if len(parts) < 2:
                     continue
                 try:
-                    tg_id = int(parts[0])
+                    key = int(parts[0])
                 except ValueError:
                     continue
-                name = parts[2].strip()
+                name = parts[2].strip() if len(parts) >= 3 else parts[1].strip()
                 if name:
-                    names[tg_id] = name
+                    names[key] = name
     except OSError:
         return
 
@@ -96,11 +100,19 @@ def load_tg_list(path):
     print(f"[tg list] loaded {len(names)} names from {path}")
 
 
-def lookup_tg_name(tg_id, list_path):
+def lookup_tg_name(tg_id, list_path, lookup_key=None):
+    """tg_id is what actually gets stored/displayed as the talkgroup. Some
+    list files (WPSD's TGIF/YSF cross-references) are indexed by a different
+    key than that -- the full DMRGateway-encoded number, not the bare TG --
+    so lookup_key lets the caller supply that separately. Falls back to
+    str(tg_id), never str(lookup_key), so a miss still shows the short
+    number rather than the confusing 7-digit encoded form."""
+    if lookup_key is None:
+        lookup_key = tg_id
     if tg_id in TG_NAMES:
         return TG_NAMES[tg_id]
     load_tg_list(list_path)
-    return _tg_list_caches.get(list_path, {}).get(tg_id, str(tg_id))
+    return _tg_list_caches.get(list_path, {}).get(lookup_key, str(tg_id))
 
 
 START_RE = re.compile(r"received (?:RF|network) voice header from (\S+) to (.+)")
@@ -137,10 +149,10 @@ def parse_talkgroup(destination_text):
     raw = m.group(1)
     if len(raw) == 7 and raw[0] == "5":
         tg_id = int(raw[1:])
-        return tg_id, lookup_tg_name(tg_id, TG_LIST_TGIF_PATH), "TGIF"
+        return tg_id, lookup_tg_name(tg_id, TG_LIST_TGIF_PATH, lookup_key=int(raw)), "TGIF"
     if len(raw) == 7 and raw[0] == "7":
         tg_id = int(raw[1:])
-        return tg_id, lookup_tg_name(tg_id, TG_LIST_YSF_PATH), "DMR2YSF"
+        return tg_id, lookup_tg_name(tg_id, TG_LIST_YSF_PATH, lookup_key=int(raw)), "DMR2YSF"
 
     tg_id = int(raw)
     return tg_id, lookup_tg_name(tg_id, TG_LIST_BM_PATH), "BrandMeister"
