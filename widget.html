@@ -150,6 +150,13 @@
       <div class="aprs-comment" id="aprsComment"></div>
       <div class="aprs-msg" id="aprsMsg"></div>
     </div>
+    <div class="aprs-section" id="lastHeardSection" style="display:none;">
+      <div class="aprs-row">
+        <span class="aprs-label">Last Heard</span>
+        <span id="lastHeardAgo">--</span>
+      </div>
+      <div class="aprs-comment" id="lastHeardDetail"></div>
+    </div>
   </div>
 
 <script>
@@ -237,6 +244,27 @@
         }
       } else {
         el('aprsSection').style.display = 'none';
+      }
+
+      // Last Heard is a persisted snapshot of the most recent DMR session --
+      // captured the moment it went off_air, so it's still there to look at
+      // even after the current talkgroup/network fields get cleared.
+      if (data.last_heard && data.last_heard.time) {
+        el('lastHeardSection').style.display = '';
+        el('lastHeardAgo').textContent = timeAgo(data.last_heard.time);
+        const lh = data.last_heard;
+        const parts = [];
+        if (lh.talkgroup) {
+          const tgLabel = lh.talkgroup_name && lh.talkgroup_name !== String(lh.talkgroup)
+            ? `TG ${lh.talkgroup} - ${lh.talkgroup_name}`
+            : `TG ${lh.talkgroup}`;
+          parts.push(tgLabel);
+        }
+        if (lh.network) parts.push(lh.network);
+        if (lh.mode) parts.push(lh.mode);
+        el('lastHeardDetail').textContent = parts.join(' \u00b7 ');
+      } else {
+        el('lastHeardSection').style.display = 'none';
       }
 
       const widget = el('widget');

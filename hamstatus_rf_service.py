@@ -233,6 +233,11 @@ def set_state(new_state, extra_fields=None, remove_fields=None):
                     for key in remove_fields:
                         data.pop(key, None)
                 data["last_updated"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+                if extra_fields and "last_heard" in extra_fields:
+                    # Stamped here, not when the transition was scheduled --
+                    # this needs to reflect the moment it actually went
+                    # off_air (2 minutes later), not when the key was released.
+                    data["last_heard"]["time"] = data["last_updated"]
                 github_put(data, current["sha"])
                 current_state = new_state
                 detail = f" +{extra_fields}" if extra_fields else ""
@@ -284,12 +289,21 @@ def on_keyup(tg_text):
 def on_keydown(tg, duration):
     print(f"\u26AA key released ({duration}s) -- monitoring in {MONITORING_AFTER}s, off_air in {OFF_AIR_AFTER}s unless you key up again")
     cancel_pending_timers()
+
+    # Snapshot what was active, so it isn't just lost once the talkgroup
+    # fields get cleared at off_air -- "time" gets filled in by set_state
+    # itself when this transition actually fires, 2 minutes from now.
+    tg_id, tg_name, network = parse_talkgroup(tg)
+    last_heard = {"mode": "DMR"}
+    if tg_id is not None:
+        last_heard.update({"talkgroup": tg_id, "talkgroup_name": tg_name, "network": network})
+
     # Talkgroup fields stay in place through "monitoring" -- the dynamic TG is
     # still linked during that window, it's only fully dropped at "off_air".
     schedule_transition(MONITORING_AFTER, "monitoring",
                          extra_fields={"activity": "Listening", "custom_message": MSG_MONITORING})
     schedule_transition(OFF_AIR_AFTER, "off_air",
-                         extra_fields={"custom_message": MSG_OFF_AIR},
+                         extra_fields={"custom_message": MSG_OFF_AIR, "last_heard": last_heard},
                          remove_fields=["talkgroup", "talkgroup_name", "network"])
 
 

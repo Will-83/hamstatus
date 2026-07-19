@@ -24,6 +24,13 @@
     <div class="hs-aprs-comment" id="hs-aprs-comment"></div>
     <div class="hs-aprs-msg" id="hs-aprs-msg"></div>
   </div>
+  <div class="hs-aprs" id="hs-last-heard-section" style="display:none;">
+    <div class="hs-aprs-row">
+      <span>Last Heard</span>
+      <span id="hs-last-heard-ago">--</span>
+    </div>
+    <div class="hs-aprs-comment" id="hs-last-heard-detail"></div>
+  </div>
 </div>
 
 <!-- Simple Styling to make it look sharp -->
@@ -164,6 +171,27 @@
         }
       } else {
         aprsSection.style.display = 'none';
+      }
+
+      // Last Heard: a persisted snapshot of the most recent DMR session,
+      // captured the moment it went off_air, so it survives after the
+      // current talkgroup/network fields get cleared.
+      const lastHeardSection = document.getElementById('hs-last-heard-section');
+      if (data.last_heard && data.last_heard.time) {
+        lastHeardSection.style.display = '';
+        document.getElementById('hs-last-heard-ago').textContent = hsTimeAgo(data.last_heard.time);
+        const lh = data.last_heard;
+        const parts = [];
+        if (lh.talkgroup) {
+          parts.push(lh.talkgroup_name && lh.talkgroup_name !== String(lh.talkgroup)
+            ? `TG ${lh.talkgroup} - ${lh.talkgroup_name}`
+            : `TG ${lh.talkgroup}`);
+        }
+        if (lh.network) parts.push(lh.network);
+        if (lh.mode) parts.push(lh.mode);
+        document.getElementById('hs-last-heard-detail').textContent = parts.join(' \u00b7 ');
+      } else {
+        lastHeardSection.style.display = 'none';
       }
     } catch (error) {
       console.error('Error fetching HamStatus:', error);
