@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "callsign": "W8MB",
-  "state": "off_air",
-  "activity": "Listening",
+  "state": "on_air",
+  "activity": "US-America Link",
   "frequency": {
     "value": "Local",
     "unit": "MHz",
@@ -14,8 +14,8 @@
     "grid_square": "EM37",
     "reference": "Local Repeater"
   },
-  "custom_message": "Monitoring the local repeater. Drop a call!",
-  "last_updated": "2026-07-19T19:17:22Z",
+  "custom_message": "Transmitting on US-America Link",
+  "last_updated": "2026-07-19T21:38:46Z",
   "aprs": {
     "last_beacon": "2026-07-19T21:36:24Z",
     "position": {
@@ -36,5 +36,8 @@
   "last_heard": {
     "mode": "DMR",
     "time": "2026-07-19T19:17:22Z"
-  }
+  },
+  "talkgroup": 32592,
+  "talkgroup_name": "US-America Link",
+  "network": "DMR2YSF"
 }
