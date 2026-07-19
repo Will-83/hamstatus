@@ -54,11 +54,16 @@ HamStatus is **not** another logging program. Excellent loggers already exist. I
 
 **Last Heard** — a persisted snapshot of your most recent DMR session (talkgroup, network, time), so that info isn't just lost the moment you go off-air.
 
+**Discord notifications** — two independent, webhook-based options, no bot process or hosting required:
+- An **instant** on-air announcement posted directly from the RF watcher the moment a new session starts (see `hamstatus_rf_service.py`).
+- A **scheduled multi-member poller** (`discord_notify.py`, run every 10 minutes via GitHub Actions) that watches a list of members' `status.json` URLs and posts to a club channel whenever any of them go on air — no server to run, just a webhook URL and a roster of callsigns in `discord_members.json`.
+
+Point these at different Discord channels/webhooks if you run both, so a single on-air session doesn't get announced twice.
+
 ### Planned, not yet built
 
 - **Specialized operating-mode layouts** — dedicated POTA/SOTA, Field Day, and ARES/Skywarn presentations are an idea, not implemented. Today there's a general-purpose `state`/`activity`/`custom_message` model that can describe any of these informally, but no purpose-built layout for them yet.
 - **Club Active Roster widget** — showing which of a club's members are currently active. This depends on the multi-user backend below; a single `status.json` per station doesn't have a concept of "club" at all yet.
-- **Discord bot**
 
 ---
 
@@ -128,11 +133,11 @@ A few things worth knowing about this shape:
 - Automated DMR detection (BrandMeister, TGIF, DMR2YSF) via a local RF-watcher service
 - Automated APRS beaconing/messaging via a local watcher reading APRS-IS directly, with coordinates always rounded for privacy
 - Live embeddable widget (iframe), embeddable page cards, and an auto-rendered PNG for platforms that block scripts/iframes (QRZ bios)
+- Discord on-air notifications, both instant (single station) and scheduled (multi-member, club-friendly)
 
 **Planned:**
 - Multi-user backend (real database, one record per registered callsign)
 - Batch lookup API for "check these callsigns" and club rosters
 - Tiered privacy (public basic info; more detail available only to approved viewers)
 - Club-curated rosters with independent per-member opt-out of display
-- Discord bot
 - Beta testing with a small group once the multi-user version exists
