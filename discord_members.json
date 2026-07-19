@@ -1,0 +1,9 @@
+{
+  "_comment": "Public config -- safe to commit. Just callsigns and their public status.json URLs. The actual Discord webhook URL is a secret and does NOT go here -- see README/workflow for how it's set.",
+  "members": [
+    {
+      "callsign": "W8MB",
+      "status_url": "https://will-83.github.io/hamstatus/status.json"
+    }
+  ]
+}

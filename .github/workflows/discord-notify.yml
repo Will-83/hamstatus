@@ -1,0 +1,49 @@
+name: Discord on-air notifier
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch: {}  # lets you trigger a run manually from the Actions tab, for testing
+
+permissions:
+  contents: write
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run notifier
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: python discord_notify.py
+
+      - name: Commit state cache if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add discord_state_cache.json
+          if git diff --staged --quiet; then
+            echo "No state change, nothing to commit"
+            exit 0
+          fi
+          git commit -m "Update Discord notifier state cache [skip ci]"
+
+          # This repo gets frequent competing auto-commits (the Pi's RF/APRS
+          # services, the render-status-png workflow), so main may have
+          # moved since checkout -- retry with a rebase instead of failing
+          # outright on a non-fast-forward push.
+          for attempt in 1 2 3 4 5; do
+            if git push; then
+              exit 0
+            fi
+            echo "Push rejected (attempt $attempt/5), pulling and retrying..."
+            git pull --rebase origin "${{ github.ref_name }}"
+          done
+          echo "Failed to push after 5 attempts"
+          exit 1
