@@ -152,7 +152,7 @@ def parse_talkgroup(destination_text):
         return tg_id, lookup_tg_name(tg_id, TG_LIST_TGIF_PATH, lookup_key=int(raw)), "TGIF"
     if len(raw) == 7 and raw[0] == "7":
         tg_id = int(raw[1:])
-        return tg_id, lookup_tg_name(tg_id, TG_LIST_YSF_PATH, lookup_key=int(raw)), "DMR2YSF"
+        return tg_id, lookup_tg_name(tg_id, TG_LIST_YSF_PATH), "DMR2YSF"
 
     tg_id = int(raw)
     return tg_id, lookup_tg_name(tg_id, TG_LIST_BM_PATH), "BrandMeister"
