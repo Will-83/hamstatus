@@ -17,14 +17,14 @@
   "custom_message": "Just wrapped up -- still listening.",
   "last_updated": "2026-07-19T17:50:29Z",
   "aprs": {
-    "last_beacon": "2026-07-19T17:47:59Z",
+    "last_beacon": "2026-07-19T17:51:54Z",
     "position": {
       "lat": 37.11,
       "lon": -92.58
     },
     "symbol": "/a",
     "course": 322,
-    "speed_mph": 1,
+    "speed_mph": 0,
     "altitude_ft": null,
     "comment": "William",
     "last_message": {
