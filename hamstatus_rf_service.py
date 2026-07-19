@@ -27,7 +27,7 @@ import urllib.error
 import urllib.request
 from datetime import date
 
-import config  # local file: GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO, GITHUB_PATH, GITHUB_BRANCH
+import config  # local file: GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO, GITHUB_PATH, GITHUB_BRANCH, DISCORD_WEBHOOK_URL
 
 WATCHED_CALLSIGN = "W8MB"
 LOG_DIR = "/var/log/pi-star"
@@ -211,6 +211,35 @@ def github_put(new_data, sha):
         return json.loads(resp.read())
 
 
+# ----------------------------------------------------------- Discord webhook
+
+# Optional -- only set DISCORD_WEBHOOK_URL in config.py if you want an
+# announcement posted each time a NEW on-air session starts (re-keying
+# during an ongoing QSO does not re-announce). Leave it unset/absent to
+# skip Discord entirely.
+DISCORD_WEBHOOK_URL = getattr(config, "DISCORD_WEBHOOK_URL", None)
+
+
+def notify_discord(message):
+    if not DISCORD_WEBHOOK_URL:
+        return
+    body = json.dumps({"content": message}).encode("utf-8")
+    req = urllib.request.Request(
+        DISCORD_WEBHOOK_URL, data=body, method="POST",
+        headers={
+            "Content-Type": "application/json",
+            # Discord/Cloudflare blocks urllib's default User-Agent outright
+            # (403) -- without this override every post silently fails.
+            "User-Agent": "Mozilla/5.0 (compatible; hamstatus-rf-service/1.0)",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10):
+            pass
+    except Exception as e:
+        print(f"[error] Discord webhook failed: {e}")
+
+
 # ------------------------------------------------------------- State machine
 
 MAX_CONFLICT_RETRIES = 3
@@ -275,6 +304,8 @@ def schedule_transition(delay, new_state, extra_fields=None, remove_fields=None)
 
 def on_keyup(tg_text):
     cancel_pending_timers()
+    is_new_session = current_state != "on_air"
+
     tg_id, tg_name, network = parse_talkgroup(tg_text)
     extra = {"mode": "DMR", "activity": tg_name or tg_text}
     if tg_id is not None:
@@ -284,6 +315,12 @@ def on_keyup(tg_text):
         extra["custom_message"] = MSG_ON_AIR_PRIVATE
     set_state("on_air", extra_fields=extra)
     print(f"\U0001F534 ON AIR -> {tg_text}")
+
+    if is_new_session:
+        if tg_id is not None:
+            notify_discord(f"\U0001F534 **{WATCHED_CALLSIGN}** was just seen on the air — TG {tg_id} “{tg_name}” ({network})")
+        else:
+            notify_discord(f"\U0001F534 **{WATCHED_CALLSIGN}** was just seen on the air — private call")
 
 
 def on_keydown(tg, duration):
