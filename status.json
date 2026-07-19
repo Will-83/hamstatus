@@ -15,5 +15,17 @@
     "reference": "Local Repeater"
   },
   "custom_message": "",
-  "last_updated": "2026-07-18T15:27:56.667Z"
+  "last_updated": "2026-07-18T15:27:56.667Z",
+  "aprs": {
+    "last_beacon": "2026-07-19T02:18:00Z",
+    "position": {
+      "lat": 37.1,
+      "lon": -92.57
+    },
+    "symbol": "/P",
+    "course": null,
+    "speed_mph": null,
+    "altitude_ft": 1358,
+    "comment": ""
+  }
 }
