@@ -2,7 +2,8 @@
 HamStatus RF Activity Service
 
 Tails the hotspot's own MMDVMHost log for RF transmissions from your callsign
-and keeps status.json's "state" field in sync:
+(DMR, NXDN, P25 -- native YSF over-the-air is NOT covered, only DMR2YSF
+bridging; see parse_talkgroup) and keeps status.json's "state" field in sync:
 
     key up                          -> "on_air" (immediately)
     key down, then 30s of silence   -> "monitoring"
@@ -130,9 +131,23 @@ def lookup_tg_name(tg_id, list_path, lookup_key=None, name_index=None):
     return _tg_list_caches.get(list_path, {}).get(lookup_key, str(tg_id))
 
 
+# DMR's MMDVMHost wording ("received RF voice header...", "end of voice
+# transmission...", "voice transmission lost..."). NXDN and P25 use their
+# own, subtly different wording (confirmed against MMDVMHost's actual
+# source, not guessed) -- no "voice" in NXDN's, and P25's RF/network end-of-
+# transmission lines are phrased differently from each other.
 START_RE = re.compile(r"received (?:RF|network) voice header from (\S+) to (.+)")
 END_RE = re.compile(r"received (?:RF|network) end of voice transmission from (\S+) to (.+?), ([\d.]+) seconds")
 LOST_RE = re.compile(r"(?:RF|network) voice transmission lost from (\S+) to (.+?), ([\d.]+) seconds")
+
+NXDN_START_RE = re.compile(r"NXDN, received RF header from (\S+) to (.+)")
+NXDN_END_RE = re.compile(r"NXDN, received (?:RF|network) end of transmission from (\S+) to (.+?), ([\d.]+) seconds")
+NXDN_LOST_RE = re.compile(r"NXDN, transmission lost from (\S+) to (.+?), ([\d.]+) seconds")
+
+P25_START_RE = re.compile(r"P25, received RF voice transmission from (\S+) to (.+)")
+P25_END_RE = re.compile(r"P25, (?:received RF end of voice|network end of) transmission from (\S+) to (.+?), ([\d.]+) seconds")
+P25_LOST_RE = re.compile(r"P25, transmission lost from (\S+) to (.+?), ([\d.]+) seconds")
+
 TG_RE = re.compile(r"^TG (\d+)$")
 
 state_lock = threading.Lock()
@@ -171,6 +186,19 @@ def parse_talkgroup(destination_text):
 
     tg_id = int(raw)
     return tg_id, lookup_tg_name(tg_id, TG_LIST_BM_PATH), "BrandMeister"
+
+
+def parse_simple_tg(destination_text, network):
+    """For modes with no WPSD/DMRGateway TG-prefix encoding to decode (NXDN,
+    P25) -- just a plain talkgroup number. There's no local name list for
+    these yet (unlike TGList_BM/TGIF/YSFHosts), so the talkgroup number
+    doubles as its own display name rather than claiming a lookup that
+    doesn't exist."""
+    m = TG_RE.match(destination_text.strip())
+    if not m:
+        return None, None, None
+    tg_id = int(m.group(1))
+    return tg_id, f"TG {tg_id}", network
 
 
 # ---------------------------------------------------------------- GitHub API
@@ -302,36 +330,47 @@ def schedule_transition(delay, new_state, extra_fields=None, remove_fields=None)
     pending_timers.append(t)
 
 
-def on_keyup(tg_text):
+def on_keyup(tg_text, mode="DMR"):
     cancel_pending_timers()
     is_new_session = current_state != "on_air"
 
-    tg_id, tg_name, network = parse_talkgroup(tg_text)
-    extra = {"mode": "DMR", "activity": tg_name or tg_text}
+    if mode == "DMR":
+        tg_id, tg_name, network = parse_talkgroup(tg_text)
+    else:
+        tg_id, tg_name, network = parse_simple_tg(tg_text, mode)
+
+    extra = {"mode": mode, "activity": tg_name or tg_text}
     if tg_id is not None:
         extra.update({"talkgroup": tg_id, "talkgroup_name": tg_name, "network": network})
         extra["custom_message"] = MSG_ON_AIR_TG.format(name=tg_name)
     else:
         extra["custom_message"] = MSG_ON_AIR_PRIVATE
     set_state("on_air", extra_fields=extra)
-    print(f"\U0001F534 ON AIR -> {tg_text}")
+    print(f"\U0001F534 ON AIR ({mode}) -> {tg_text}")
 
     if is_new_session:
         if tg_id is not None:
-            notify_discord(f"\U0001F534 **{WATCHED_CALLSIGN}** was just seen on the air — TG {tg_id} “{tg_name}” ({network})")
+            # parse_simple_tg's fallback name is just "TG <id>" again -- no
+            # point repeating it verbatim when there's no real friendly name.
+            has_friendly_name = tg_name != f"TG {tg_id}"
+            detail = f"TG {tg_id} “{tg_name}” ({network})" if has_friendly_name else f"TG {tg_id} ({network})"
+            notify_discord(f"\U0001F534 **{WATCHED_CALLSIGN}** was just seen on the air — {detail}")
         else:
-            notify_discord(f"\U0001F534 **{WATCHED_CALLSIGN}** was just seen on the air — private call")
+            notify_discord(f"\U0001F534 **{WATCHED_CALLSIGN}** was just seen on the air — {mode} private call")
 
 
-def on_keydown(tg, duration):
+def on_keydown(tg, duration, mode="DMR"):
     print(f"\u26AA key released ({duration}s) -- monitoring in {MONITORING_AFTER}s, off_air in {OFF_AIR_AFTER}s unless you key up again")
     cancel_pending_timers()
 
     # Snapshot what was active, so it isn't just lost once the talkgroup
     # fields get cleared at off_air -- "time" gets filled in by set_state
     # itself when this transition actually fires, 2 minutes from now.
-    tg_id, tg_name, network = parse_talkgroup(tg)
-    last_heard = {"mode": "DMR"}
+    if mode == "DMR":
+        tg_id, tg_name, network = parse_talkgroup(tg)
+    else:
+        tg_id, tg_name, network = parse_simple_tg(tg, mode)
+    last_heard = {"mode": mode}
     if tg_id is not None:
         last_heard.update({"talkgroup": tg_id, "talkgroup_name": tg_name, "network": network})
 
@@ -364,6 +403,36 @@ def handle_line(line, callsign):
     m = LOST_RE.search(line)
     if m and m.group(1) == callsign:
         on_keydown(m.group(2).strip(), m.group(3))
+        return
+
+    m = NXDN_START_RE.search(line)
+    if m and m.group(1) == callsign:
+        on_keyup(m.group(2).strip(), mode="NXDN")
+        return
+
+    m = NXDN_END_RE.search(line)
+    if m and m.group(1) == callsign:
+        on_keydown(m.group(2).strip(), m.group(3), mode="NXDN")
+        return
+
+    m = NXDN_LOST_RE.search(line)
+    if m and m.group(1) == callsign:
+        on_keydown(m.group(2).strip(), m.group(3), mode="NXDN")
+        return
+
+    m = P25_START_RE.search(line)
+    if m and m.group(1) == callsign:
+        on_keyup(m.group(2).strip(), mode="P25")
+        return
+
+    m = P25_END_RE.search(line)
+    if m and m.group(1) == callsign:
+        on_keydown(m.group(2).strip(), m.group(3), mode="P25")
+        return
+
+    m = P25_LOST_RE.search(line)
+    if m and m.group(1) == callsign:
+        on_keydown(m.group(2).strip(), m.group(3), mode="P25")
         return
 
 
