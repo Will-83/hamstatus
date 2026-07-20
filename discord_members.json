@@ -4,6 +4,11 @@
     {
       "callsign": "W8MB",
       "status_url": "https://will-83.github.io/hamstatus/status.json"
+      "callsign": "kf0wss",
+      "status_url": "https://will-83.github.io/hamstatus/json_files/kf0wss-status.json"
+      "callsign": "kf0yso",
+      "status_url": "https://will-83.github.io/hamstatus/json_files/kf0yso-status.json"
+      
     }
   ]
 }
