@@ -5,12 +5,39 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HamStatus Club Roster</title>
 <style>
-  :root {
-    --bg: #0b131f;
+  /* Three themes, picked via ?theme=dark|light|invisible (dark is default).
+     Set as a data-theme attribute on <html> by the script below, since
+     that has to happen before first paint based on the URL, not just CSS
+     media queries -- this is an embed, so it doesn't get to guess at the
+     host page's own light/dark preference. */
+  :root, [data-theme="dark"] {
     --panel: #111a2e;
     --border: #1e293b;
     --text: #e2e8f0;
     --muted: #64748b;
+    --header: #38bdf8;
+    --on: #2ecc71;
+    --monitor: #f0ad4e;
+  }
+  [data-theme="light"] {
+    --panel: #ffffff;
+    --border: #e2e8f0;
+    --text: #1e293b;
+    --muted: #64748b;
+    --header: #2563eb;
+    --on: #16a34a;
+    --monitor: #d97706;
+  }
+  /* No card chrome at all -- just the text, floating on whatever
+     background the host page already has. Text stays light since most
+     embeds so far have been on dark sites; swap --text/--muted here if
+     you're embedding on a light page instead. */
+  [data-theme="invisible"] {
+    --panel: transparent;
+    --border: transparent;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --header: #38bdf8;
     --on: #2ecc71;
     --monitor: #f0ad4e;
   }
@@ -31,7 +58,7 @@
     font-size: 0.8rem;
     font-weight: 700;
     letter-spacing: 0.5px;
-    color: #38bdf8;
+    color: var(--header);
     border-bottom: 1px solid var(--border);
     text-transform: uppercase;
   }
@@ -71,6 +98,12 @@
 <script>
 (function () {
   const params = new URLSearchParams(window.location.search);
+
+  const theme = params.get('theme');
+  if (theme === 'light' || theme === 'invisible') {
+    document.documentElement.setAttribute('data-theme', theme);
+  }
+
   const membersSrc = params.get('members') || './discord_members.json';
   const refreshSec = parseInt(params.get('refresh') || '60', 10);
   const rbnEnabled = params.get('rbn') !== 'off';
