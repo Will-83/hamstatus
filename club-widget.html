@@ -150,7 +150,19 @@
         when = timeAgo(data.last_updated);
         sortTime = data.last_updated ? new Date(data.last_updated).getTime() : 0;
       } else if (active) {
-        where = data.activity || data.mode || (state === 'on_air' ? 'On Air' : 'Monitoring');
+        // Frequency-based modes (FT8, FT4, WSPR, CW, SSB, FM, ...) have no
+        // talkgroup, but the frequency itself is the actually useful "where"
+        // -- more so than the free-text activity field. Supports both the
+        // v1.0 schema (frequency as an object) and the older flat schema
+        // (frequency as a plain string), like widget.html/test.html do.
+        const freq = (data.frequency && typeof data.frequency === 'object')
+          ? data.frequency
+          : { value: data.frequency, unit: 'MHz' };
+        const hasFreq = freq.value !== undefined && freq.value !== null && freq.value !== '';
+
+        where = hasFreq
+          ? `${freq.value} ${freq.unit || 'MHz'}${data.mode ? ` (${data.mode})` : ''}`
+          : data.activity || data.mode || (state === 'on_air' ? 'On Air' : 'Monitoring');
         when = timeAgo(data.last_updated);
         sortTime = data.last_updated ? new Date(data.last_updated).getTime() : 0;
       } else if (data.last_heard && data.last_heard.time) {
