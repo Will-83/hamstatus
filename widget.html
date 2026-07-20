@@ -134,7 +134,7 @@
       <span class="freq" id="freq">--.---</span><span class="unit" id="unit">MHz</span><span class="mode-tag" id="modetag">--</span><span class="mode-tag" id="bandtag" style="display:none;"></span>
     </div>
     <div class="freq-row" id="tgrow" style="display:none;">
-      <span class="freq" id="tgtext">TG ----</span><span class="mode-tag">DMR</span>
+      <span class="freq" id="tgtext">TG ----</span><span class="mode-tag" id="tgmodetag">--</span>
     </div>
     <div class="opmode" id="opmode">--</div>
     <div class="msg" id="msg"></div>
@@ -201,16 +201,25 @@
       el('callsign').textContent = data.callsign || '--';
       el('modetag').textContent = data.mode || '--';
 
-      // DMR sessions with an active talkgroup show "TG <id> - <name>" instead
-      // of the frequency row; everything else shows frequency as usual.
-      const tgActive = data.mode === 'DMR' && data.talkgroup;
+      // Any session with an active talkgroup (DMR, NXDN, P25) shows
+      // "TG <id> - <name>" instead of the frequency row; everything else
+      // shows frequency as usual. The backend only ever sets talkgroup for
+      // an actual group call, so its presence alone is the right check --
+      // not every mode that can have one.
+      const tgActive = !!data.talkgroup;
       el('freqrow').style.display = tgActive ? 'none' : '';
       el('tgrow').style.display = tgActive ? '' : 'none';
       if (tgActive) {
-        const tgLabel = data.talkgroup_name && data.talkgroup_name !== String(data.talkgroup)
+        // Modes with no real name lookup yet (NXDN, P25) fall back to
+        // "TG <id>" as talkgroup_name itself -- comparing against the bare
+        // number would treat that as a "real" name and show it twice
+        // ("TG 12345 - TG 12345"), so compare against the same fallback
+        // format instead.
+        const tgLabel = data.talkgroup_name && data.talkgroup_name !== `TG ${data.talkgroup}`
           ? `TG ${data.talkgroup} - ${data.talkgroup_name}`
           : `TG ${data.talkgroup}`;
         el('tgtext').textContent = tgLabel;
+        el('tgmodetag').textContent = data.mode || '--';
       } else {
         el('freq').textContent = (freq.value !== undefined && freq.value !== null && freq.value !== '') ? freq.value : '--.---';
         el('unit').textContent = freq.unit || 'MHz';
@@ -255,7 +264,8 @@
         const lh = data.last_heard;
         const parts = [];
         if (lh.talkgroup) {
-          const tgLabel = lh.talkgroup_name && lh.talkgroup_name !== String(lh.talkgroup)
+          // Same fallback-name comparison as the live talkgroup row above.
+          const tgLabel = lh.talkgroup_name && lh.talkgroup_name !== `TG ${lh.talkgroup}`
             ? `TG ${lh.talkgroup} - ${lh.talkgroup_name}`
             : `TG ${lh.talkgroup}`;
           parts.push(tgLabel);
