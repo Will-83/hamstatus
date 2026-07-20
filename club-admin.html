@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HamStatus Club Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+  :root {
+    --bg: #121212;
+    --panel: #1e1e1e;
+    --panel-2: #262626;
+    --border: #333;
+    --text: #eee;
+    --muted: #94a3b8;
+    --accent-blue: #38bdf8;
+    --danger: #e74c3c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 20px;
+  }
+  .wrap { width: 100%; max-width: 480px; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+  h1 { font-size: 1.2rem; margin: 0 0 4px; }
+  h2 { font-size: 1rem; margin: 0 0 12px; }
+  h3 { font-size: 0.85rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 20px 0 10px; }
+  .subtitle { color: var(--muted); font-size: 0.85rem; margin-bottom: 20px; }
+  label { display: block; font-size: 0.85rem; color: var(--muted); margin: 14px 0 6px; }
+  input[type=text], input[type=password], textarea {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 0.95rem;
+    font-family: inherit;
+  }
+  textarea { resize: vertical; }
+  input:focus, textarea:focus { outline: 2px solid var(--accent-blue); outline-offset: 1px; }
+  button {
+    padding: 10px 14px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-primary { background: var(--accent-blue); color: #06202b; margin-top: 14px; width: 100%; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
+  .btn-delete { background: rgba(231,76,60,0.15); color: #f87171; border: 1px solid rgba(231,76,60,0.35); }
+  .row-inline { display: flex; gap: 8px; }
+  .row-inline input { flex: 1; }
+  .row-check { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 0.8rem; color: var(--muted); }
+  .row-check input { width: auto; }
+  .msg { font-size: 0.85rem; padding: 10px 12px; border-radius: 6px; margin-top: 14px; display: none; }
+  .msg.show { display: block; }
+  .msg.ok { background: rgba(46,204,113,0.12); color: #4ade80; border: 1px solid rgba(46,204,113,0.35); }
+  .msg.err { background: rgba(231,76,60,0.12); color: #f87171; border: 1px solid rgba(231,76,60,0.35); }
+  .msg.info { background: rgba(56,189,248,0.1); color: var(--accent-blue); border: 1px solid rgba(56,189,248,0.3); }
+  details { margin-top: 14px; }
+  summary { cursor: pointer; font-size: 0.8rem; color: var(--muted); }
+  .roster-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--panel-2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; font-size: 0.9rem;
+  }
+  .roster-row button { padding: 5px 10px; font-size: 0.78rem; }
+  .muted-note { color: var(--muted); font-size: 0.85rem; font-style: italic; }
+  .fine-print { font-size: 0.75rem; color: var(--muted); margin-top: 10px; line-height: 1.4; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card">
+    <h1>HamStatus Club Admin</h1>
+    <div class="subtitle">Create and manage a club roster for the club widget</div>
+
+    <details id="repo-config-details">
+      <summary>Repository settings</summary>
+      <label for="cfg-owner">GitHub username / org</label>
+      <input type="text" id="cfg-owner" value="will-83">
+      <label for="cfg-repo">Repository name</label>
+      <input type="text" id="cfg-repo" value="hamstatus">
+      <label for="cfg-branch">Branch</label>
+      <input type="text" id="cfg-branch" value="main">
+    </details>
+
+    <label for="token">GitHub Personal Access Token</label>
+    <input type="password" id="token" placeholder="github_pat_..." autocomplete="off">
+    <div class="row-check">
+      <input type="checkbox" id="remember-token">
+      <label for="remember-token" style="margin:0;">Keep token for this browser tab only (cleared when tab closes)</label>
+    </div>
+
+    <label for="club-name">Club Name</label>
+    <input type="text" id="club-name" placeholder="e.g. LZARC">
+
+    <button class="btn-primary" id="load-club-btn">Load / Create Club</button>
+    <div id="club-msg" class="msg"></div>
+    <div class="fine-print">If the club doesn't exist yet, it's created the moment you add its first member -- nothing is written just from loading.</div>
+  </div>
+
+  <div class="card" id="roster-card" style="display:none;">
+    <h2 id="roster-heading">Roster</h2>
+    <div id="roster-list"></div>
+
+    <h3>Add Members</h3>
+    <label for="add-callsign">Single callsign</label>
+    <div class="row-inline">
+      <input type="text" id="add-callsign" placeholder="e.g. KF0WSS">
+      <button class="btn-secondary" id="add-one-btn">Add</button>
+    </div>
+
+    <label for="bulk-callsigns">Bulk add (one per line, or comma/space separated)</label>
+    <textarea id="bulk-callsigns" rows="4" placeholder="KF0WSS&#10;KF0YSO&#10;W8MB"></textarea>
+    <label for="bulk-file">...or upload a list (.txt/.csv)</label>
+    <input type="file" id="bulk-file" accept=".txt,.csv">
+    <button class="btn-primary" id="add-bulk-btn">Add All</button>
+    <div id="add-msg" class="msg"></div>
+
+    <h3>Remove a Member</h3>
+    <div class="row-inline">
+      <input type="text" id="remove-callsign" placeholder="e.g. KF0WSS">
+      <button class="btn-secondary" id="remove-btn" style="background: rgba(231,76,60,0.15); color: #f87171; border-color: rgba(231,76,60,0.35);">Delete</button>
+    </div>
+    <div id="remove-msg" class="msg"></div>
+    <div class="fine-print">Removing a member also deletes their placeholder status file here (if they have one) -- if they'd pointed their entry at an external status.json instead, only the roster entry is removed.</div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  const el = id => document.getElementById(id);
+
+  if (sessionStorage.getItem('hs_club_token')) {
+    el('token').value = sessionStorage.getItem('hs_club_token');
+    el('remember-token').checked = true;
+  }
+  el('remember-token').addEventListener('change', function () {
+    if (this.checked) sessionStorage.setItem('hs_club_token', el('token').value.trim());
+    else sessionStorage.removeItem('hs_club_token');
+  });
+
+  function utf8ToB64(str) {
+    return btoa(String.fromCharCode(...new TextEncoder().encode(str)));
+  }
+  function b64ToUtf8(b64) {
+    const binary = atob(b64.replace(/\n/g, ''));
+    const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
+  }
+
+  function owner() { return el('cfg-owner').value.trim(); }
+  function repo() { return el('cfg-repo').value.trim(); }
+  function branch() { return el('cfg-branch').value.trim(); }
+  function token() { return el('token').value.trim(); }
+
+  function apiUrl(path) {
+    return `https://api.github.com/repos/${owner()}/${repo()}/contents/${path}`;
+  }
+  function authHeaders() {
+    return { 'Authorization': `Bearer ${token()}`, 'Accept': 'application/vnd.github+json' };
+  }
+
+  function showMsg(elm, text, kind) {
+    elm.textContent = text;
+    elm.className = 'msg show ' + kind;
+  }
+
+  // ===========================================================
+  // GITHUB CONTENTS API HELPERS
+  // ===========================================================
+  async function ghGet(path) {
+    const res = await fetch(`${apiUrl(path)}?ref=${encodeURIComponent(branch())}`, { headers: authHeaders() });
+    if (res.status === 404) return null;
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(`${res.status}${body.message ? ' — ' + body.message : ''}`);
+    }
+    const json = await res.json();
+    return { sha: json.sha, data: JSON.parse(b64ToUtf8(json.content)) };
+  }
+
+  async function ghPut(path, data, sha, message) {
+    const body = { message, content: utf8ToB64(JSON.stringify(data, null, 2)), branch: branch() };
+    if (sha) body.sha = sha;
+    const res = await fetch(apiUrl(path), {
+      method: 'PUT',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      const b = await res.json().catch(() => ({}));
+      throw new Error(`${res.status}${b.message ? ' — ' + b.message : ''}`);
+    }
+    return res.json();
+  }
+
+  async function ghDelete(path, sha, message) {
+    const res = await fetch(apiUrl(path), {
+      method: 'DELETE',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, sha, branch: branch() })
+    });
+    if (!res.ok) {
+      const b = await res.json().catch(() => ({}));
+      throw new Error(`${res.status}${b.message ? ' — ' + b.message : ''}`);
+    }
+  }
+
+  // ===========================================================
+  // CLUB / ROSTER STATE
+  // ===========================================================
+  let currentSlug = null;
+  let currentMembersSha = null;
+  let currentMembers = [];
+
+  function slugify(name) {
+    return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  }
+  function membersPath(slug) { return `clubs/${slug}/members.json`; }
+  function memberStatusPath(slug, callsign) { return `clubs/${slug}/json_files/${callsign.toLowerCase()}-status.json`; }
+  function memberStatusUrl(slug, callsign) {
+    return `https://${owner()}.github.io/${repo()}/clubs/${slug}/json_files/${callsign.toLowerCase()}-status.json`;
+  }
+
+  function renderRoster() {
+    const list = el('roster-list');
+    list.innerHTML = '';
+    if (!currentMembers.length) {
+      const p = document.createElement('div');
+      p.className = 'muted-note';
+      p.textContent = 'No members yet.';
+      list.appendChild(p);
+      return;
+    }
+    currentMembers.forEach(m => {
+      const row = document.createElement('div');
+      row.className = 'roster-row';
+      const span = document.createElement('span');
+      span.textContent = m.callsign;
+      const btn = document.createElement('button');
+      btn.className = 'btn-delete';
+      btn.textContent = 'Delete';
+      btn.addEventListener('click', () => removeMember(m.callsign));
+      row.append(span, btn);
+      list.appendChild(row);
+    });
+  }
+
+  async function saveMembersList(message) {
+    const result = await ghPut(
+      membersPath(currentSlug),
+      { _comment: 'Public config -- safe to commit. Managed by club-admin.html.', members: currentMembers },
+      currentMembersSha,
+      message
+    );
+    currentMembersSha = result.content.sha;
+  }
+
+  el('load-club-btn').addEventListener('click', async function () {
+    const name = el('club-name').value.trim();
+    if (!token()) { showMsg(el('club-msg'), 'Enter your GitHub token first.', 'err'); return; }
+    if (!name) { showMsg(el('club-msg'), 'Enter a club name.', 'err'); return; }
+
+    currentSlug = slugify(name);
+    if (!currentSlug) { showMsg(el('club-msg'), 'Club name must contain at least one letter or number.', 'err'); return; }
+
+    if (el('remember-token').checked) sessionStorage.setItem('hs_club_token', token());
+    showMsg(el('club-msg'), 'Loading...', 'info');
+
+    try {
+      const existing = await ghGet(membersPath(currentSlug));
+      if (existing) {
+        currentMembersSha = existing.sha;
+        currentMembers = existing.data.members || [];
+        showMsg(el('club-msg'), `Loaded "${name}" (${currentMembers.length} member${currentMembers.length === 1 ? '' : 's'}).`, 'ok');
+      } else {
+        currentMembersSha = null;
+        currentMembers = [];
+        showMsg(el('club-msg'), `"${name}" doesn't exist yet — it's created when you add the first member.`, 'info');
+      }
+      el('roster-heading').textContent = `${name} Roster`;
+      el('roster-card').style.display = 'block';
+      renderRoster();
+    } catch (err) {
+      showMsg(el('club-msg'), 'Failed to load: ' + err.message, 'err');
+    }
+  });
+
+  // ===========================================================
+  // ADD MEMBERS
+  // ===========================================================
+  async function addMember(callsignRaw) {
+    const callsign = callsignRaw.trim().toUpperCase();
+    if (!callsign) return { ok: false, error: 'empty callsign' };
+    if (currentMembers.some(m => m.callsign.toUpperCase() === callsign)) {
+      return { ok: false, error: `${callsign} already on roster` };
+    }
+    try {
+      // Placeholder status.json for a member with no hamstatus setup of
+      // their own -- the same pattern already used for existing
+      // manually-managed members (see json_files/kf0wss-status.json).
+      const placeholder = {
+        version: '1.0', callsign, state: 'off_air', activity: '',
+        custom_message: 'No status set.', last_updated: new Date().toISOString()
+      };
+      await ghPut(memberStatusPath(currentSlug, callsign), placeholder, null, `Add ${callsign} to ${currentSlug}`);
+      currentMembers.push({ callsign, status_url: memberStatusUrl(currentSlug, callsign) });
+      await saveMembersList(`Add ${callsign} to ${currentSlug} roster`);
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  }
+
+  el('add-one-btn').addEventListener('click', async function () {
+    const btn = this;
+    btn.disabled = true;
+    showMsg(el('add-msg'), 'Adding...', 'info');
+    const result = await addMember(el('add-callsign').value);
+    if (result.ok) {
+      el('add-callsign').value = '';
+      renderRoster();
+      showMsg(el('add-msg'), 'Added.', 'ok');
+    } else {
+      showMsg(el('add-msg'), 'Failed: ' + result.error, 'err');
+    }
+    btn.disabled = false;
+  });
+
+  el('bulk-file').addEventListener('change', function () {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => { el('bulk-callsigns').value = reader.result; };
+    reader.readAsText(file);
+  });
+
+  el('add-bulk-btn').addEventListener('click', async function () {
+    const raw = el('bulk-callsigns').value;
+    const callsigns = raw.split(/[\s,;]+/).map(s => s.trim()).filter(Boolean);
+    if (!callsigns.length) { showMsg(el('add-msg'), 'Nothing to add.', 'err'); return; }
+
+    const btn = this;
+    btn.disabled = true;
+    let added = 0;
+    const failed = [];
+    for (const cs of callsigns) {
+      // Sequential, not parallel -- each add does a read-modify-write of
+      // the same members.json, so concurrent writes would race each
+      // other's sha the same way the Pi's auto-commits raced our own
+      // pushes earlier.
+      showMsg(el('add-msg'), `Adding ${cs}... (${added + failed.length + 1}/${callsigns.length})`, 'info');
+      const result = await addMember(cs);
+      if (result.ok) added++; else failed.push(`${cs} (${result.error})`);
+    }
+    renderRoster();
+    el('bulk-callsigns').value = '';
+    el('bulk-file').value = '';
+    showMsg(el('add-msg'), `Added ${added}/${callsigns.length}.` + (failed.length ? ' Failed: ' + failed.join(', ') : ''), failed.length ? 'err' : 'ok');
+    btn.disabled = false;
+  });
+
+  // ===========================================================
+  // REMOVE MEMBER
+  // ===========================================================
+  async function removeMember(callsignRaw) {
+    const callsign = callsignRaw.trim().toUpperCase();
+    const idx = currentMembers.findIndex(m => m.callsign.toUpperCase() === callsign);
+    if (idx === -1) {
+      showMsg(el('remove-msg'), `${callsign} isn't on the roster.`, 'err');
+      return;
+    }
+    showMsg(el('remove-msg'), `Removing ${callsign}...`, 'info');
+    try {
+      currentMembers.splice(idx, 1);
+      await saveMembersList(`Remove ${callsign} from ${currentSlug} roster`);
+
+      // Best-effort cleanup of their placeholder file -- if this fails (or
+      // they'd pointed their entry at an external status_url with no file
+      // here to delete), the roster removal above already succeeded, which
+      // is what actually matters.
+      try {
+        const existing = await ghGet(memberStatusPath(currentSlug, callsign));
+        if (existing) await ghDelete(memberStatusPath(currentSlug, callsign), existing.sha, `Remove ${callsign}'s status file`);
+      } catch (cleanupErr) { /* non-fatal */ }
+
+      renderRoster();
+      showMsg(el('remove-msg'), `Removed ${callsign}.`, 'ok');
+    } catch (err) {
+      showMsg(el('remove-msg'), 'Failed: ' + err.message, 'err');
+    }
+  }
+
+  el('remove-btn').addEventListener('click', function () {
+    const callsign = el('remove-callsign').value;
+    el('remove-callsign').value = '';
+    removeMember(callsign);
+  });
+})();
+</script>
+</body>
+</html>
