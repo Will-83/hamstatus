@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mock Club Site — Club Roster Widget Preview</title>
+<style>
+  body {
+    margin: 0; padding: 40px 20px; min-height: 100vh;
+    background: #0b0f1a; color: #cbd5e1;
+    font-family: system-ui, -apple-system, sans-serif;
+    display: flex; justify-content: center;
+  }
+  .site { width: 100%; max-width: 640px; }
+  h1 { color: #f1f5f9; font-size: 1.4rem; margin-bottom: 4px; }
+  .subtitle { color: #64748b; font-size: 0.9rem; margin-bottom: 28px; }
+  .fake-nav {
+    display: flex; gap: 18px; padding-bottom: 16px; margin-bottom: 28px;
+    border-bottom: 1px solid #1e293b; font-size: 0.85rem; color: #94a3b8;
+  }
+  .fake-content {
+    background: #111827; border: 1px solid #1e293b; border-radius: 8px;
+    padding: 20px; margin-bottom: 24px; font-size: 0.9rem; line-height: 1.6;
+  }
+  .widget-frame {
+    width: 100%; height: 260px; border: 0; display: block;
+  }
+  .caption { font-size: 0.75rem; color: #475569; margin-top: 8px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="site">
+  <h1>Example Ham Radio Club</h1>
+  <div class="subtitle">This page simulates a real club website embedding the roster widget via iframe — nothing here is part of the widget itself.</div>
+
+  <div class="fake-nav">
+    <span>Home</span><span>Nets</span><span>Repeaters</span><span>Membership</span>
+  </div>
+
+  <div class="fake-content">
+    Welcome to the club! Below is our live member activity roster, powered by HamStatus.
+  </div>
+
+  <iframe class="widget-frame" src="./club-widget.html"></iframe>
+  <div class="caption">↑ this iframe is the actual club-widget.html, unmodified</div>
+</div>
+</body>
+</html>

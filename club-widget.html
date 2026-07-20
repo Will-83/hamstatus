@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HamStatus Club Roster</title>
+<style>
+  :root {
+    --bg: #0b131f;
+    --panel: #111a2e;
+    --border: #1e293b;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --on: #2ecc71;
+    --monitor: #f0ad4e;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  body {
+    color: var(--text);
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Consolas, monospace;
+  }
+  .roster {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .roster-title {
+    padding: 10px 14px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #38bdf8;
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  th, td { text-align: left; padding: 8px 14px; }
+  th {
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+  }
+  tr + tr td { border-top: 1px solid var(--border); }
+  .callsign-cell { display: flex; align-items: center; gap: 8px; font-weight: 700; white-space: nowrap; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: var(--muted); }
+  .dot.on_air { background: var(--on); box-shadow: 0 0 6px 1px var(--on); }
+  .dot.monitoring { background: var(--monitor); }
+  .where-cell { color: #cbd5e1; }
+  .time-cell { color: var(--muted); white-space: nowrap; }
+  .empty-row td { text-align: center; color: var(--muted); padding: 16px; font-style: italic; }
+</style>
+</head>
+<body>
+<div class="roster" id="roster">
+  <div class="roster-title">Club Roster</div>
+  <table>
+    <thead>
+      <tr><th>Callsign</th><th>Where</th><th>Last Heard</th></tr>
+    </thead>
+    <tbody id="roster-body">
+      <tr class="empty-row"><td colspan="3">Loading...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+(function () {
+  const params = new URLSearchParams(window.location.search);
+  const membersSrc = params.get('members') || './discord_members.json';
+  const refreshSec = parseInt(params.get('refresh') || '60', 10);
+  const rbnEnabled = params.get('rbn') !== 'off';
+  const rbnAgeSec = parseInt(params.get('rbn_age') || '1800', 10);
+  // HamQTH's RBN proxy -- no callsign filter exists, so this pulls all
+  // current CW/digital spots and we match our own roster against it
+  // client-side. Confirmed CORS-open (Access-Control-Allow-Origin: *).
+  const RBN_URL = `https://www.hamqth.com/rbn_data.php?data=1&band=160,80,60,40,30,20,17,15,12,10,6,2&mode=CW,RTTY,PSK31,PSK63&age=${rbnAgeSec}&order=3`;
+
+  function timeAgo(iso) {
+    if (!iso) return '—';
+    const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return mins + 'm ago';
+    const hrs = Math.round(mins / 60);
+    if (hrs < 24) return hrs + 'h ago';
+    return Math.round(hrs / 24) + 'd ago';
+  }
+
+  // Same fallback-name convention as widget.html/test.html: modes without a
+  // real name lookup yet (NXDN, P25) store talkgroup_name as "TG <id>"
+  // itself, so showing it a second time next to the number would just be
+  // "TG 12345 - TG 12345" -- skip the redundant half.
+  function tgLabel(tg, tgName, network) {
+    const name = tgName && tgName !== `TG ${tg}` ? ` - ${tgName}` : '';
+    return `TG ${tg}${name}${network ? ` (${network})` : ''}`;
+  }
+
+  async function fetchJson(url) {
+    const sep = url.includes('?') ? '&' : '?';
+    const res = await fetch(`${url}${sep}t=${Date.now()}`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('fetch failed');
+    return res.json();
+  }
+
+  // Fetched once per refresh (not per member) and matched against the
+  // roster client-side. RBN being unreachable/rate-limited shouldn't take
+  // the whole roster down -- it's a supplementary signal, not the primary
+  // one -- so this fails soft to an empty map rather than throwing.
+  async function fetchRbnSpots() {
+    if (!rbnEnabled) return {};
+    try {
+      const spots = await fetchJson(RBN_URL);
+      const byCallsign = {};
+      for (const call in spots) {
+        byCallsign[call.toUpperCase()] = spots[call];
+      }
+      return byCallsign;
+    } catch (err) {
+      return {};
+    }
+  }
+
+  // RBN's freq comes back like "7 012.1" (kHz, space as thousands
+  // separator) -- strip the space rather than convert units, so there's no
+  // rounding to get wrong.
+  function rbnViewModel(spot) {
+    const freqKhz = spot.freq ? spot.freq.replace(/\s+/g, '') : null;
+    const where = freqKhz ? `${freqKhz} kHz ${spot.mode} (RBN)` : `${spot.mode || '—'} (RBN)`;
+    const ageSec = typeof spot.age === 'number' ? spot.age : 0;
+    const sortTime = Date.now() - ageSec * 1000;
+    return { where, when: timeAgo(new Date(sortTime).toISOString()), sortTime };
+  }
+
+  // Turns one member's raw status.json (or null, if it couldn't be fetched
+  // at all -- a member's file being missing/broken shouldn't take the whole
+  // roster down) into exactly what this widget shows: callsign, where, when.
+  function computeViewModel(member, data, rbnSpots) {
+    let where = '—', when = '—', state = 'unknown', sortTime = 0;
+
+    if (data) {
+      state = data.state || 'off_air';
+      const active = state === 'on_air' || state === 'monitoring';
+
+      if (active && data.talkgroup) {
+        where = tgLabel(data.talkgroup, data.talkgroup_name, data.network);
+        when = timeAgo(data.last_updated);
+        sortTime = data.last_updated ? new Date(data.last_updated).getTime() : 0;
+      } else if (active) {
+        where = data.activity || data.mode || (state === 'on_air' ? 'On Air' : 'Monitoring');
+        when = timeAgo(data.last_updated);
+        sortTime = data.last_updated ? new Date(data.last_updated).getTime() : 0;
+      } else if (data.last_heard && data.last_heard.time) {
+        const lh = data.last_heard;
+        where = lh.talkgroup ? tgLabel(lh.talkgroup, lh.talkgroup_name, lh.network) : (lh.mode || '—');
+        when = timeAgo(lh.time);
+        sortTime = new Date(lh.time).getTime();
+      }
+    }
+
+    // RBN is just another activity signal for the same person -- whichever
+    // source (hamstatus vs. RBN) is more recent wins the display. A fresh
+    // RBN spot means they're transmitting right now, so it counts as "on
+    // air" for sorting/the status dot even if their own status.json says
+    // otherwise (e.g. quiet on DMR but just spotted on 20m CW).
+    const spot = rbnSpots && rbnSpots[member.callsign.toUpperCase()];
+    if (spot) {
+      const rbnVm = rbnViewModel(spot);
+      if (rbnVm.sortTime > sortTime) {
+        where = rbnVm.where;
+        when = rbnVm.when;
+        sortTime = rbnVm.sortTime;
+        state = 'on_air';
+      }
+    }
+
+    const statePriority = state === 'on_air' ? 0 : state === 'monitoring' ? 1 : 2;
+    return { callsign: member.callsign, where, when, state, statePriority, sortTime };
+  }
+
+  // Built with textContent/createElement throughout, never innerHTML with
+  // interpolated data -- a member's status.json is untrusted input as far
+  // as this page is concerned.
+  function renderRow(vm) {
+    const tr = document.createElement('tr');
+
+    const tdCall = document.createElement('td');
+    const wrap = document.createElement('div');
+    wrap.className = 'callsign-cell';
+    const dot = document.createElement('span');
+    dot.className = 'dot' + (vm.state === 'on_air' ? ' on_air' : vm.state === 'monitoring' ? ' monitoring' : '');
+    wrap.appendChild(dot);
+    wrap.appendChild(document.createTextNode(vm.callsign));
+    tdCall.appendChild(wrap);
+
+    const tdWhere = document.createElement('td');
+    tdWhere.className = 'where-cell';
+    tdWhere.textContent = vm.where;
+
+    const tdWhen = document.createElement('td');
+    tdWhen.className = 'time-cell';
+    tdWhen.textContent = vm.when;
+
+    tr.append(tdCall, tdWhere, tdWhen);
+    return tr;
+  }
+
+  function renderEmpty(body, message) {
+    body.innerHTML = '';
+    const tr = document.createElement('tr');
+    tr.className = 'empty-row';
+    const td = document.createElement('td');
+    td.colSpan = 3;
+    td.textContent = message;
+    tr.appendChild(td);
+    body.appendChild(tr);
+  }
+
+  async function refresh() {
+    const body = document.getElementById('roster-body');
+    try {
+      const config = await fetchJson(membersSrc);
+      const members = config.members || [];
+      if (!members.length) {
+        renderEmpty(body, 'No members configured.');
+        return;
+      }
+
+      const rbnSpots = await fetchRbnSpots();
+
+      const vms = await Promise.all(members.map(async member => {
+        try {
+          const data = await fetchJson(member.status_url);
+          return computeViewModel(member, data, rbnSpots);
+        } catch (err) {
+          return computeViewModel(member, null, rbnSpots);
+        }
+      }));
+
+      // Most active first (on air, then monitoring, then off air), most
+      // recently heard first within each group -- so the people actually
+      // worth noticing right now aren't buried at the bottom of the list.
+      vms.sort((a, b) => a.statePriority - b.statePriority || b.sortTime - a.sortTime);
+
+      body.innerHTML = '';
+      vms.forEach(vm => body.appendChild(renderRow(vm)));
+    } catch (err) {
+      renderEmpty(body, 'Unable to load club roster.');
+    }
+  }
+
+  refresh();
+  setInterval(refresh, Math.max(15, refreshSec) * 1000);
+})();
+</script>
+</body>
+</html>
