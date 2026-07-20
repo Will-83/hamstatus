@@ -170,6 +170,32 @@
         <option value="1.25m"><option value="70cm"><option value="33cm"><option value="23cm">
       </datalist>
 
+      <div class="toggle-row">
+        <span class="status-label">On a talkgroup (DMR/NXDN/P25)?</span>
+        <label class="switch">
+          <input type="checkbox" id="tg-enabled">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div id="tg-fields" style="display:none;">
+        <label for="tg-id">Talkgroup ID</label>
+        <input type="text" id="tg-id" placeholder="e.g. 31291" inputmode="numeric">
+
+        <label for="tg-name">Talkgroup Name</label>
+        <input type="text" id="tg-name" placeholder="e.g. SWMO (leave blank to just show the number)">
+
+        <label for="tg-network">Network</label>
+        <select id="tg-network">
+          <option>BrandMeister</option>
+          <option>TGIF</option>
+          <option>DMR2YSF</option>
+          <option>NXDN</option>
+          <option>P25</option>
+          <option>Other</option>
+        </select>
+      </div>
+
       <label for="mode">Mode</label>
       <select id="mode">
         <option>FM</option>
@@ -213,6 +239,10 @@
   }
   el('remember-token').addEventListener('change', function () {
     if (!this.checked) sessionStorage.removeItem('hs_token');
+  });
+
+  el('tg-enabled').addEventListener('change', function () {
+    el('tg-fields').style.display = this.checked ? 'block' : 'none';
   });
 
   function utf8ToB64(str) {
@@ -274,6 +304,14 @@
       el('mode').value = modeOpt ? currentData.mode : 'Other';
       el('custom-message').value = currentData.custom_message || '';
 
+      const hasTG = currentData.talkgroup != null && currentData.talkgroup !== '';
+      el('tg-enabled').checked = hasTG;
+      el('tg-fields').style.display = hasTG ? 'block' : 'none';
+      el('tg-id').value = hasTG ? currentData.talkgroup : '';
+      el('tg-name').value = hasTG && currentData.talkgroup_name !== `TG ${currentData.talkgroup}` ? (currentData.talkgroup_name || '') : '';
+      const networkOpt = Array.from(el('tg-network').options).find(o => o.value === currentData.network);
+      el('tg-network').value = networkOpt ? currentData.network : 'Other';
+
       showMsg(el('load-msg'), 'Loaded current status.', 'ok');
       document.getElementById('form-card').style.display = 'block';
     } catch (err) {
@@ -329,6 +367,23 @@
     // Drop fields from the old flat schema so the saved file is clean v1.0
     delete updated.is_active;
     delete updated.operating_mode;
+
+    // Talkgroup fields are only present at all while actually on one --
+    // matches how the RF watcher itself writes status.json (talkgroup/
+    // talkgroup_name/network absent entirely once off_air), so widget.html
+    // and test.html's existing "if (data.talkgroup)" check works the same
+    // way whether the session came from the watcher or was set by hand here.
+    const tgId = parseInt(el('tg-id').value.trim(), 10);
+    if (el('tg-enabled').checked && !isNaN(tgId)) {
+      const tgName = el('tg-name').value.trim();
+      updated.talkgroup = tgId;
+      updated.talkgroup_name = tgName || `TG ${tgId}`;
+      updated.network = el('tg-network').value;
+    } else {
+      delete updated.talkgroup;
+      delete updated.talkgroup_name;
+      delete updated.network;
+    }
 
     try {
       const res = await fetch(apiUrl(), {
