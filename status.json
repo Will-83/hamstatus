@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "callsign": "W8MB",
-  "state": "off_air",
+  "state": "monitoring",
   "activity": "Listening",
   "frequency": {
     "value": "Local",
@@ -14,10 +14,10 @@
     "grid_square": "EM37",
     "reference": "Local Repeater"
   },
-  "custom_message": "Monitoring the local repeater. Drop a call!",
-  "last_updated": "2026-07-20T18:44:44Z",
+  "custom_message": "Just wrapped up -- still listening.",
+  "last_updated": "2026-07-20T20:59:03Z",
   "aprs": {
-    "last_beacon": "2026-07-20T18:04:09Z",
+    "last_beacon": "2026-07-20T20:23:36Z",
     "position": {
       "lat": 37.11,
       "lon": -92.58
@@ -35,9 +35,12 @@
   },
   "last_heard": {
     "mode": "DMR",
-    "talkgroup": 32592,
-    "talkgroup_name": "US-America Link",
-    "network": "DMR2YSF",
-    "time": "2026-07-20T18:44:44Z"
-  }
+    "talkgroup": 31665,
+    "talkgroup_name": "TGIF The Mothership",
+    "network": "TGIF",
+    "time": "2026-07-20T20:40:36Z"
+  },
+  "talkgroup": 32592,
+  "talkgroup_name": "US-America Link",
+  "network": "DMR2YSF"
 }
