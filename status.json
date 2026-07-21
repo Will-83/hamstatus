@@ -2,9 +2,9 @@
   "version": "1.0",
   "callsign": "W8MB",
   "state": "off_air",
-  "activity": "Listening",
+  "activity": "",
   "frequency": {
-    "value": "Local",
+    "value": "",
     "unit": "MHz",
     "band": "2m"
   },
@@ -14,8 +14,8 @@
     "grid_square": "EM37",
     "reference": "Local Repeater"
   },
-  "custom_message": "Monitoring the local repeater. Drop a call!",
-  "last_updated": "2026-07-20T21:03:57Z",
+  "custom_message": "Off the Air 73!",
+  "last_updated": "2026-07-21T02:00:16.397Z",
   "aprs": {
     "last_beacon": "2026-07-20T20:23:36Z",
     "position": {
