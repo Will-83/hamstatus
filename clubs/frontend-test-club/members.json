@@ -1,0 +1,9 @@
+{
+  "_comment": "Public config -- safe to commit. Managed by the HamStatus backend.",
+  "members": [
+    {
+      "callsign": "KE0FRONT",
+      "status_url": "https://will-83.github.io/hamstatus/clubs/frontend-test-club/json_files/ke0front-status.json"
+    }
+  ]
+}
