@@ -1,9 +1,4 @@
 {
   "_comment": "Public config -- safe to commit. Managed by the HamStatus backend.",
-  "members": [
-    {
-      "callsign": "KE0TEST",
-      "status_url": "https://will-83.github.io/hamstatus/clubs/claude-test-club/json_files/ke0test-status.json"
-    }
-  ]
+  "members": []
 }
