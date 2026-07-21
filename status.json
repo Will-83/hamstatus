@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "callsign": "W8MB",
-  "state": "off_air",
-  "activity": "",
+  "state": "on_air",
+  "activity": "US-America Link",
   "frequency": {
     "value": "",
     "unit": "MHz",
@@ -14,8 +14,8 @@
     "grid_square": "EM37",
     "reference": "Local Repeater"
   },
-  "custom_message": "Off the Air 73!",
-  "last_updated": "2026-07-21T02:00:16.397Z",
+  "custom_message": "Transmitting on US-America Link",
+  "last_updated": "2026-07-21T05:42:14Z",
   "aprs": {
     "last_beacon": "2026-07-20T20:23:36Z",
     "position": {
@@ -39,5 +39,8 @@
     "talkgroup_name": "US-America Link",
     "network": "DMR2YSF",
     "time": "2026-07-20T21:03:57Z"
-  }
+  },
+  "talkgroup": 32592,
+  "talkgroup_name": "US-America Link",
+  "network": "DMR2YSF"
 }
