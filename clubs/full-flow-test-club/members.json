@@ -1,0 +1,9 @@
+{
+  "_comment": "Public config -- safe to commit. Managed by the HamStatus backend.",
+  "members": [
+    {
+      "callsign": "W8JOINERTEST",
+      "status_url": "https://will-83.github.io/hamstatus/clubs/full-flow-test-club/json_files/w8joinertest-status.json"
+    }
+  ]
+}
