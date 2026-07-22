@@ -17,13 +17,13 @@
   "custom_message": "Transmitting on US-America Link",
   "last_updated": "2026-07-21T06:32:38Z",
   "aprs": {
-    "last_beacon": "2026-07-20T20:23:36Z",
+    "last_beacon": "2026-07-22T01:48:26Z",
     "position": {
       "lat": 37.11,
       "lon": -92.58
     },
     "symbol": "/a",
-    "course": 331,
+    "course": 104,
     "speed_mph": 0,
     "altitude_ft": null,
     "comment": "William",
