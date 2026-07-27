@@ -17,13 +17,13 @@
   "custom_message": "Monitoring the local repeater. Drop a call!",
   "last_updated": "2026-07-24T05:46:13Z",
   "aprs": {
-    "last_beacon": "2026-07-22T01:48:26Z",
+    "last_beacon": "2026-07-27T17:20:21Z",
     "position": {
-      "lat": 37.11,
-      "lon": -92.58
+      "lat": 35.83,
+      "lon": -85.96
     },
     "symbol": "/a",
-    "course": 104,
+    "course": 230,
     "speed_mph": 0,
     "altitude_ft": null,
     "comment": "William",
