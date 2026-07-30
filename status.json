@@ -17,15 +17,15 @@
   "custom_message": "Monitoring the local repeater. Drop a call!",
   "last_updated": "2026-07-30T06:17:56Z",
   "aprs": {
-    "last_beacon": "2026-07-30T16:02:29Z",
+    "last_beacon": "2026-07-30T16:08:45Z",
     "position": {
       "lat": 35.82,
       "lon": -85.95
     },
     "symbol": "/P",
-    "course": null,
-    "speed_mph": null,
-    "altitude_ft": 1037,
+    "course": 0,
+    "speed_mph": 0,
+    "altitude_ft": 1053,
     "comment": "",
     "last_message": {
       "to": "KA0MED",
