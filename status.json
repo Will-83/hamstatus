@@ -17,16 +17,16 @@
   "custom_message": "Monitoring the local repeater. Drop a call!",
   "last_updated": "2026-08-04T07:05:43Z",
   "aprs": {
-    "last_beacon": "2026-07-30T16:19:35Z",
+    "last_beacon": "2026-08-05T17:35:39Z",
     "position": {
-      "lat": 35.8,
-      "lon": -85.9
+      "lat": 37.11,
+      "lon": -92.58
     },
-    "symbol": "/P",
-    "course": 139,
-    "speed_mph": 9,
-    "altitude_ft": 1063,
-    "comment": "",
+    "symbol": "/a",
+    "course": 0,
+    "speed_mph": 0,
+    "altitude_ft": null,
+    "comment": "William",
     "last_message": {
       "to": "KA0MED",
       "text": "Test from Wood TN{6",
