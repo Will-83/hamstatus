@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "callsign": "W8MB",
-  "state": "monitoring",
+  "state": "off_air",
   "activity": "Listening",
   "frequency": {
     "value": "",
@@ -14,8 +14,8 @@
     "grid_square": "EM37",
     "reference": "Local Repeater"
   },
-  "custom_message": "Just wrapped up -- still listening.",
-  "last_updated": "2026-08-18T06:11:21Z",
+  "custom_message": "Monitoring the local repeater. Drop a call!",
+  "last_updated": "2026-08-18T06:12:51Z",
   "aprs": {
     "last_beacon": "2026-08-14T02:31:10Z",
     "position": {
@@ -35,12 +35,9 @@
   },
   "last_heard": {
     "mode": "DMR",
-    "talkgroup": 32592,
-    "talkgroup_name": "US-America Link",
+    "talkgroup": 9,
+    "talkgroup_name": "9",
     "network": "DMR2YSF",
-    "time": "2026-08-12T23:07:33Z"
-  },
-  "talkgroup": 9,
-  "talkgroup_name": "9",
-  "network": "DMR2YSF"
+    "time": "2026-08-18T06:12:51Z"
+  }
 }
