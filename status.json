@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "callsign": "W8MB",
-  "state": "off_air",
-  "activity": "Listening",
+  "state": "on_air",
+  "activity": "GB-CQ-UK",
   "frequency": {
     "value": "",
     "unit": "MHz",
@@ -14,8 +14,8 @@
     "grid_square": "EM37",
     "reference": "Local Repeater"
   },
-  "custom_message": "Monitoring the local repeater. Drop a call!",
-  "last_updated": "2026-08-26T05:11:57Z",
+  "custom_message": "Transmitting on GB-CQ-UK",
+  "last_updated": "2026-08-26T05:12:02Z",
   "aprs": {
     "last_beacon": "2026-08-14T02:31:10Z",
     "position": {
@@ -39,5 +39,8 @@
     "talkgroup_name": "GB-CQ-UK",
     "network": "DMR2YSF",
     "time": "2026-08-26T05:11:57Z"
-  }
+  },
+  "talkgroup": 9,
+  "talkgroup_name": "GB-CQ-UK",
+  "network": "DMR2YSF"
 }
