@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "callsign": "W8MB",
-  "state": "monitoring",
-  "activity": "Listening",
+  "state": "on_air",
+  "activity": "GB-CQ-UK",
   "frequency": {
     "value": "",
     "unit": "MHz",
@@ -14,8 +14,8 @@
     "grid_square": "EM37",
     "reference": "Local Repeater"
   },
-  "custom_message": "Just wrapped up -- still listening.",
-  "last_updated": "2026-08-27T05:11:16Z",
+  "custom_message": "Transmitting on GB-CQ-UK",
+  "last_updated": "2026-08-27T05:12:43Z",
   "aprs": {
     "last_beacon": "2026-08-14T02:31:10Z",
     "position": {
