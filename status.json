@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "callsign": "W8MB",
-  "state": "monitoring",
+  "state": "off_air",
   "activity": "Listening",
   "frequency": {
     "value": "",
@@ -14,8 +14,8 @@
     "grid_square": "EM37",
     "reference": "Local Repeater"
   },
-  "custom_message": "Just wrapped up -- still listening.",
-  "last_updated": "2026-09-24T05:19:08Z",
+  "custom_message": "Monitoring the local repeater. Drop a call!",
+  "last_updated": "2026-09-24T05:20:38Z",
   "aprs": {
     "last_beacon": "2026-09-14T23:49:53Z",
     "position": {
@@ -38,9 +38,6 @@
     "talkgroup": 9,
     "talkgroup_name": "GB-CQ-UK",
     "network": "DMR2YSF",
-    "time": "2026-09-23T05:37:10Z"
-  },
-  "talkgroup": 9,
-  "talkgroup_name": "GB-CQ-UK",
-  "network": "DMR2YSF"
+    "time": "2026-09-24T05:20:38Z"
+  }
 }
